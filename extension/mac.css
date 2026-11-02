@@ -1,0 +1,581 @@
+.ytd-ad-slot-renderer,
+.ytd-companion-slot-renderer,
+.ytd-action-companion-ad-renderer,
+.ytd-watch-next-secondary-results-renderer.sparkles-light-cta,
+.ytd-unlimited-offer-module-renderer,
+.ytp-ad-overlay-image,
+.ytp-ad-text-overlay,
+div#root.style-scope.ytd-display-ad-renderer.yt-simple-endpoint,
+div#sparkles-container.style-scope.ytd-promoted-sparkles-web-renderer,
+.ytd-display-ad-renderer,
+.ytd-statement-banner-renderer,
+.ytd-in-feed-ad-layout-renderer,
+div#player-ads.style-scope.ytd-watch-flexy,
+.ytd-banner-promo-renderer,
+.ytd-video-masthead-ad-v3-renderer,
+.ytd-primetime-promo-renderer {
+    height: 0.5px !important;
+    width: 0.5px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.ad-interrupting:not([id]) {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.video-ads {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.ytp-popup,
+.ytp-caption-window-container,
+.ytp-impression-link,
+.ytp-watermark,
+.ytp-pause-overlay,
+.ytp-iv-player-content,
+.song-media-controls.style-scope.ytmusic-player,
+ytmusic-player #bezel,
+.ytp-gradient-top,
+.ytp-gradient-bottom,
+.ytp-chrome-bottom,
+.ytp-inline-preview-controls {
+    display: none !important;
+}
+
+.ytp-chrome-top .ytp-title-channel,
+.ytp-chrome-top .ytp-chrome-top-buttons,
+.ytp-chrome-top .ytp-title .ytp-title-text .ytp-title-subtext {
+    display: none !important;
+}
+
+.ytp-miniplayer-ui,
+.ytp-webgl-spherical-control {
+    z-index: 99 !important;
+}
+
+.ytp-chrome-top {
+    top: 6px !important;
+    left: 6px !important;
+    right: 6px !important;
+}
+
+.ytp-chrome-top.paused {
+    z-index: 101 !important;
+}
+
+.ytp-chrome-top .ytp-title {
+    min-height: 31px !important;
+}
+
+.ytp-chrome-top .ytp-title .ytp-title-text {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    text-align: center;
+}
+
+.ytp-chrome-top .ytp-title .ytp-title-text:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(17.5px) !important;
+    border-radius: 8px !important;
+    pointer-events: none !important;
+}
+
+.ytp-chrome-top .ytp-title .ytp-title-text:after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    mix-blend-mode: lighten !important;
+    border-radius: 8px !important;
+    pointer-events: none !important;
+}
+
+.ytp-chrome-top .ytp-title .ytp-title-text .ytp-title-link {
+    margin: 0 !important;
+    padding: 0 6px !important;
+    font-family: ui-sans-serif !important;
+    font-size: 12px !important;
+    line-height: 31px !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    mix-blend-mode: plus-lighter !important;
+}
+
+.ytp-large-play-button {
+    width: 60px !important;
+    height: 60px !important;
+    margin-left: -30px !important;
+    margin-top: -30px !important;
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(17.5px) !important;
+    border-radius: 50% !important;
+    transition: none !important;
+}
+
+.ytp-large-play-button svg {
+    display: none !important;
+}
+
+.ytp-large-play-button:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    mix-blend-mode: lighten !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+}
+
+.ytp-large-play-button:after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 3px !important;
+    height: 100% !important;
+    width: 100% !important;
+    background-color: rgba(255, 255, 255, 0.75) !important;
+    mix-blend-mode: plus-lighter !important;
+    -webkit-mask-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMTFweCIgaGVpZ2h0PSIxM3B4IiB2aWV3Qm94PSIwIDAgMTEgMTMiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0wLjk2NzM3MDc5NCwxMi41NjQzNTI1IEMxLjI1Mzg0MDEzLDEyLjU2NDM1MjUgMS40OTczMjE0NiwxMi40NDk3NjkyIDEuNzgzNzkwNzksMTIuMjg1MDU2NyBMMTAuMTM0MDM3NSw3LjQ1ODIzNDY3IEMxMC43Mjg0NDgxLDcuMTA3MzIgMTAuOTM2MTI4MSw2Ljg3ODE1MzMzIDEwLjkzNjEyODEsNi40OTg1OTQ2NyBDMTAuOTM2MTI4MSw2LjExOTAzNiAxMC43Mjg0NDgxLDUuODg5ODY5MzMgMTAuMTM0MDM3NSw1LjU0NjEyNjY3IEwxLjc4Mzc5MDc5LDAuNzEyMTQgQzEuNDk3MzIxNDYsMC41NDc0MzMzMzMgMS4yNTM4NDAxMywwLjQ0IDAuOTY3MzcwNzk0LDAuNDQgQzAuNDM3NDM0Nzk0LDAuNDQgMC4xMDgwMDY3OTQsMC44NDEwNDUzMzMgMC4xMDgwMDY3OTQsMS40NjQxIEwwLjEwODAwNjc5NCwxMS41MzMxMDMxIEMwLjEwODAwNjc5NCwxMi4xNTYxNDk5IDAuNDM3NDM0Nzk0LDEyLjU2NDM1MjUgMC45NjczNzA3OTQsMTIuNTY0MzUyNSBaIi8+Cjwvc3ZnPg==") !important;
+    -webkit-mask-size: 100% 100% !important;
+    -webkit-mask-repeat: no-repeat !important;
+    transform: scale(0.4) !important;
+    pointer-events: none !important;
+}
+
+/* new mobile embed html */
+
+body.webkit #player-controls,
+body.webkit #player-control-overlay {
+    pointer-events: none !important;
+}
+
+body.webkit #bottom-sheet-wrapper {
+    display: none !important;
+}
+
+body.webkit .ytmCuedOverlayGradient,
+body.webkit .player-controls-a11y-toggle,
+body.webkit .player-controls-background-container,
+body.webkit .ytwPlayerFullscreenControlsHost,
+body.webkit .ytmVideoInfoChannelContainer,
+body.webkit .ytmVideoInfoChannelTitle,
+body.webkit .ytwPlayerTopControlsPlayerControlsTopRight,
+body.webkit .ytwPlayerMiddleControlsHost,
+body.webkit .ytwPlayerBottomControlsHost,
+body.webkit .ytPlayerProgressBarHost,
+body.webkit .ytmEmbedsInfoPanelRendererHost {
+    display: none !important;
+}
+
+body.webkit:has(.playing-mode) .ytwPlayerTopControlsHost {
+    visibility: hidden !important;
+}
+
+body.webkit .ytwPlayerTopControlsContainerWithEmbeddedVideoDetails,
+body.webkit .ytwPlayerTopControlsContainerWithLeftContent {
+    top: 6px !important;
+    left: 6px !important;
+    right: 6px !important;
+    width: calc(100% - 12px) !important;
+}
+
+body.webkit .ytmVideoInfoVideoDetailsContainer {
+    padding: 0 !important;
+    height: 31px !important;
+    min-height: 0 !important;
+}
+
+body.webkit .ytmVideoInfoVideoTitleContainer {
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+}
+
+body.webkit .ytmVideoInfoVideoTitleContainer:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(17.5px) !important;
+    border-radius: 8px !important;
+    pointer-events: none !important;
+}
+
+body.webkit .ytmVideoInfoVideoTitleContainer:after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    mix-blend-mode: lighten !important;
+    border-radius: 8px !important;
+    pointer-events: none !important;
+}
+
+body.webkit .ytmVideoInfoVideoTitleContainer .ytmVideoInfoVideoTitle {
+    margin: 0 !important;
+    padding: 0 6px !important;
+    font-family: ui-sans-serif !important;
+    font-size: 12px !important;
+    line-height: 31px !important;
+    font-weight: 400 !important;
+    font-stretch: normal !important;
+    color: rgba(255, 255, 255, 0.75) !important;
+    text-overflow: ellipsis !important;
+    mix-blend-mode: plus-lighter !important;
+    pointer-events: auto !important;
+}
+
+body.webkit .ytmCuedOverlayPlayButton {
+    width: 60px !important;
+    height: 60px !important;
+    margin-left: -30px !important;
+    margin-top: -30px !important;
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(17.5px) !important;
+    border-radius: 50% !important;
+    transition: none !important;
+    pointer-events: auto !important;
+}
+
+body.webkit .ytmCuedOverlayPlayButton .ytmCuedOverlayPlayButtonIcon {
+    display: none !important;
+}
+
+body.webkit .ytmCuedOverlayPlayButton:before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(255, 255, 255, 0.14) !important;
+    mix-blend-mode: lighten !important;
+    border-radius: 50% !important;
+    pointer-events: none !important;
+}
+
+body.webkit .ytmCuedOverlayPlayButton:after {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 3px !important;
+    height: 100% !important;
+    width: 100% !important;
+    background-color: rgba(255, 255, 255, 0.75) !important;
+    mix-blend-mode: plus-lighter !important;
+    -webkit-mask-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMTFweCIgaGVpZ2h0PSIxM3B4IiB2aWV3Qm94PSIwIDAgMTEgMTMiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0wLjk2NzM3MDc5NCwxMi41NjQzNTI1IEMxLjI1Mzg0MDEzLDEyLjU2NDM1MjUgMS40OTczMjE0NiwxMi40NDk3NjkyIDEuNzgzNzkwNzksMTIuMjg1MDU2NyBMMTAuMTM0MDM3NSw3LjQ1ODIzNDY3IEMxMC43Mjg0NDgxLDcuMTA3MzIgMTAuOTM2MTI4MSw2Ljg3ODE1MzMzIDEwLjkzNjEyODEsNi40OTg1OTQ2NyBDMTAuOTM2MTI4MSw2LjExOTAzNiAxMC43Mjg0NDgxLDUuODg5ODY5MzMgMTAuMTM0MDM3NSw1LjU0NjEyNjY3IEwxLjc4Mzc5MDc5LDAuNzEyMTQgQzEuNDk3MzIxNDYsMC41NDc0MzMzMzMgMS4yNTM4NDAxMywwLjQ0IDAuOTY3MzcwNzk0LDAuNDQgQzAuNDM3NDM0Nzk0LDAuNDQgMC4xMDgwMDY3OTQsMC44NDEwNDUzMzMgMC4xMDgwMDY3OTQsMS40NjQxIEwwLjEwODAwNjc5NCwxMS41MzMxMDMxIEMwLjEwODAwNjc5NCwxMi4xNTYxNDk5IDAuNDM3NDM0Nzk0LDEyLjU2NDM1MjUgMC45NjczNzA3OTQsMTIuNTY0MzUyNSBaIi8+Cjwvc3ZnPg==") !important;
+    -webkit-mask-size: 100% 100% !important;
+    -webkit-mask-repeat: no-repeat !important;
+    transform: scale(0.4) !important;
+    pointer-events: none !important;
+}
+
+div[data-spelare-container] {
+    z-index: 99 !important;
+}
+
+video {
+    left: 0 !important;
+    width: 100% !important;
+    object-fit: contain !important;
+    background: black !important;
+    cursor: auto !important;
+    z-index: 100 !important;
+}
+
+video[style*="top: -"] {
+    transform: translateY(-100%) !important;
+}
+
+.ytp-inline-preview-mode video {
+    pointer-events: none !important;
+}
+
+body:not(.webkit) video[data-spelare-video] {
+    top: 0 !important;
+}
+
+video::-webkit-media-text-track-display {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    text-align: center !important;
+}
+
+video::cue(:future) {
+    color: #fff !important;
+}
+
+.html5-video-player {
+    overflow: visible !important;
+}
+
+/* Spelare's controls: Quality and Theater, centred at the top of the video.
+   Safari's own controls take the corners (full screen and Picture in
+   Picture top left, sound top right) and the bottom (play bar), so these sit
+   between them as a third group, in the same height and translucent material.
+   Like Safari's, they show while the pointer moves over the video, while it's
+   paused and while the quality menu is open (toolbar.js adds .visible), and
+   while a button has keyboard focus. Inside the player they never collide
+   with the page, in the default, theater or any other layout. */
+#spelare-toolbar {
+    all: initial !important;
+    position: absolute !important;
+    top: 6px !important;
+    left: 50% !important;
+    translate: -50% 0 !important;
+    display: flex !important;
+    font-size: 0 !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    transform: translateY(-4px) !important;
+    transition: opacity 240ms ease, transform 240ms ease !important;
+    -webkit-user-select: none !important;
+    z-index: 101 !important;
+}
+
+#spelare-toolbar.visible,
+#spelare-toolbar:focus-within {
+    opacity: 1 !important;
+    transform: none !important;
+    transition-duration: 120ms !important;
+}
+
+#spelare-toolbar.visible .controls,
+#spelare-toolbar.visible .picker,
+#spelare-toolbar:focus-within .controls,
+#spelare-toolbar:focus-within .picker {
+    pointer-events: auto !important;
+}
+
+#spelare-toolbar .controls,
+#spelare-toolbar .picker {
+    all: initial !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: none !important;
+    gap: 6px !important;
+    pointer-events: none !important;
+}
+
+#spelare-toolbar .button {
+    all: initial !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex: none !important;
+    height: 31px !important;
+    padding: 0 12px !important;
+    border-radius: 15.5px !important;
+    box-sizing: border-box !important;
+    font: 500 13px/31px -apple-system, system-ui, sans-serif !important;
+    letter-spacing: -0.01em !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    background: rgba(30, 30, 32, 0.55) !important;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    cursor: pointer !important;
+    pointer-events: inherit !important;
+    transition: background-color 120ms ease, color 120ms ease !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0) !important;
+    -webkit-user-select: none !important;
+}
+
+#spelare-toolbar .button:hover {
+    background: rgba(60, 60, 64, 0.7) !important;
+}
+
+#spelare-toolbar .button:active {
+    background: rgba(80, 80, 86, 0.75) !important;
+}
+
+#spelare-toolbar .button:focus-visible {
+    outline: 2px solid #0a84ff !important;
+    outline-offset: 2px !important;
+}
+
+#spelare-toolbar .button.active {
+    color: #000 !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+}
+
+#spelare-toolbar .quality::before,
+#spelare-toolbar .theater::before {
+    content: "" !important;
+    display: block !important;
+    width: 15px !important;
+    height: 15px !important;
+    margin-left: -1px !important;
+    background-color: currentColor !important;
+    -webkit-mask: var(--spelare-icon) center / contain no-repeat !important;
+    mask: var(--spelare-icon) center / contain no-repeat !important;
+}
+
+#spelare-toolbar .quality {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M2 4.5h6.5M13.5 4.5H14M2 11.5h.5M7.5 11.5H14'/%3E%3Ccircle cx='11' cy='4.5' r='2'/%3E%3Ccircle cx='5' cy='11.5' r='2'/%3E%3C/svg%3E") !important;
+}
+
+#spelare-toolbar .theater {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6'%3E%3Crect x='1.5' y='3.5' width='13' height='9' rx='2'/%3E%3C/svg%3E") !important;
+}
+
+/* The quality menu: drops down below the Quality button, like a macOS
+   pop-up menu, with a checkmark on the playing quality. */
+#spelare-toolbar .picker {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    min-width: 150px !important;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    padding: 5px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    background: rgba(30, 30, 32, 0.72) !important;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(24px) !important;
+    backdrop-filter: saturate(180%) blur(24px) !important;
+    scrollbar-width: none !important;
+}
+
+#spelare-toolbar .picker::-webkit-scrollbar {
+    display: none !important;
+}
+
+#spelare-toolbar .picker .button {
+    gap: 8px !important;
+    height: 28px !important;
+    padding: 0 10px 0 8px !important;
+    border-radius: 7px !important;
+    line-height: 28px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Room for the checkmark on every item, so the labels line up. */
+#spelare-toolbar .picker .button::before {
+    content: "" !important;
+    display: block !important;
+    flex: none !important;
+    width: 12px !important;
+    height: 12px !important;
+}
+
+#spelare-toolbar .picker .button.active::before {
+    background-color: currentColor !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 6.5 4.8 9.2 10 3'/%3E%3C/svg%3E") center / contain no-repeat !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 6.5 4.8 9.2 10 3'/%3E%3C/svg%3E") center / contain no-repeat !important;
+}
+
+#spelare-toolbar .picker .button:hover {
+    color: #fff !important;
+    background: #0a84ff !important;
+}
+
+#spelare-toolbar .picker .button.active {
+    color: rgba(255, 255, 255, 0.92) !important;
+    background: transparent !important;
+}
+
+#spelare-toolbar .picker .button.active:hover {
+    color: #fff !important;
+    background: #0a84ff !important;
+}
+
+/* Sound only is a different kind of choice: a separator sets it apart. */
+#spelare-toolbar .picker .separator {
+    all: initial !important;
+    display: block !important;
+    height: 1px !important;
+    margin: 5px 8px !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.ytp-small-mode #spelare-toolbar,
+.ytp-inline-preview-mode #spelare-toolbar,
+ytd-miniplayer #spelare-toolbar,
+html[data-spelare-no-toolbar] #spelare-toolbar,
+body.webkit #primary #spelare-toolbar {
+    display: none !important;
+}
+
+/* Parts of YouTube hidden from the popup (src/content/page-cleanup.js sets
+   these attributes on <html>). Rules lean on ids and links, which YouTube
+   changes least, but it renames elements now and then. When a rule stops
+   matching, the diagnostic log says so ("hideRules: … rule missed: …") and
+   names the elements around what showed: add a selector for them here. */
+
+/* Shorts: home and subscriptions shelves, shelves in search and on watch
+   pages, single Shorts in feeds and results, and the sidebar entry. The
+   first rule is the backup: src/content/hide-guard.js marks the tile or
+   shelf around each /shorts/ link, whatever YouTube calls it. */
+html[data-spelare-hide-shorts] [data-spelare-hidden-shorts],
+html[data-spelare-hide-shorts] ytd-reel-shelf-renderer,
+html[data-spelare-hide-shorts] ytd-rich-shelf-renderer[is-shorts],
+html[data-spelare-hide-shorts] ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
+html[data-spelare-hide-shorts] ytd-rich-section-renderer:has(ytm-shorts-lockup-view-model),
+html[data-spelare-hide-shorts] ytd-rich-section-renderer:has(ytm-shorts-lockup-view-model-v2),
+html[data-spelare-hide-shorts] grid-shelf-view-model:has(ytm-shorts-lockup-view-model),
+html[data-spelare-hide-shorts] grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2),
+html[data-spelare-hide-shorts] ytd-rich-item-renderer:has(a[href^="/shorts/"]),
+html[data-spelare-hide-shorts] ytd-video-renderer:has(a[href^="/shorts/"]),
+html[data-spelare-hide-shorts] ytd-grid-video-renderer:has(a[href^="/shorts/"]),
+html[data-spelare-hide-shorts] ytd-compact-video-renderer:has(a[href^="/shorts/"]),
+html[data-spelare-hide-shorts] ytd-guide-entry-renderer:has(a[title="Shorts"]),
+html[data-spelare-hide-shorts] ytd-mini-guide-entry-renderer[aria-label="Shorts"],
+html[data-spelare-hide-shorts] yt-tab-shape[tab-title="Shorts"] {
+    display: none !important;
+}
+
+/* End screens (the video and channel tiles over the last seconds), info
+   cards, and the grid of videos shown when a video ends. */
+html[data-spelare-hide-end-screens] .ytp-ce-element,
+html[data-spelare-hide-end-screens] .ytp-cards-teaser,
+html[data-spelare-hide-end-screens] .ytp-cards-button,
+html[data-spelare-hide-end-screens] .ytp-endscreen-content,
+html[data-spelare-hide-end-screens] .html5-endscreen.videowall-endscreen {
+    display: none !important;
+}
+
+/* Comments below the video, and the comments panel. */
+html[data-spelare-hide-comments] #comments,
+html[data-spelare-hide-comments] ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-comments-section"] {
+    display: none !important;
+}
+
+/* Recommendations: related videos next to (or below) the video, and the home
+   feed. Playlists and live chat in the sidebar stay. */
+html[data-spelare-hide-recommendations] #related,
+html[data-spelare-hide-recommendations] ytd-browse[page-subtype="home"] ytd-rich-grid-renderer,
+html[data-spelare-hide-recommendations] [page-subtype="home"] #primary {
+    display: none !important;
+}

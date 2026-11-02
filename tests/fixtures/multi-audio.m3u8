@@ -1,0 +1,18 @@
+#EXTM3U
+#EXT-X-INDEPENDENT-SEGMENTS
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/233/xtags/orig/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="233",NAME="English (United States) original",LANGUAGE="en",DEFAULT=YES,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/234/xtags/orig/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="234",NAME="English",LANGUAGE="en",DEFAULT=NO,AUTOSELECT=YES,YT-EXT-XTAGS="YWNvbnQ9b3JpZ2luYWw6bGFuZz1lbg"
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/234/xtags/dub/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="234-es",NAME="Spanish",LANGUAGE="es",DEFAULT=NO,AUTOSELECT=YES,YT-EXT-XTAGS="YWNvbnQ9ZHViYmVkLWF1dG86bGFuZz1lcw"
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/233/xtags/fr/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="233-fr",NAME="French dubbed",LANGUAGE="fr",DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-STREAM-INF:BANDWIDTH=1100000,CODECS="avc1.4D401E,mp4a.40.2",RESOLUTION=640x360,FRAME-RATE=30,VIDEO-RANGE=SDR,AUDIO="234",SUBTITLES="vtt",YT-EXT-XTAGS="YWNvbnQ9b3JpZ2luYWw6bGFuZz1lbg"
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/230/aud/orig/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=1100000,CODECS="avc1.4D401E,mp4a.40.2",RESOLUTION=640x360,FRAME-RATE=30,VIDEO-RANGE=SDR,AUDIO="234-es",SUBTITLES="vtt",YT-EXT-XTAGS="YWNvbnQ9ZHViYmVkLWF1dG86bGFuZz1lcw"
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/230/aud/es/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2900000,CODECS="avc1.4D401F,mp4a.40.2",RESOLUTION=1280x720,FRAME-RATE=30,VIDEO-RANGE=SDR,AUDIO="234",SUBTITLES="vtt",YT-EXT-XTAGS="YWNvbnQ9b3JpZ2luYWw6bGFuZz1lbg"
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/232/aud/orig/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2900000,CODECS="avc1.4D401F,mp4a.40.2",RESOLUTION=1280x720,FRAME-RATE=30,VIDEO-RANGE=SDR,AUDIO="234-es",SUBTITLES="vtt",YT-EXT-XTAGS="YWNvbnQ9ZHViYmVkLWF1dG86bGFuZz1lcw"
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/232/aud/es/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2900000,CODECS="avc1.4D401F,mp4a.40.2",RESOLUTION=1280x720,FRAME-RATE=30,VIDEO-RANGE=SDR,AUDIO="233-fr"
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/232/aud/fr/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2900000,CODECS="avc1.4D401F,mp4a.40.2",RESOLUTION=854x480,FRAME-RATE=30,VIDEO-RANGE=SDR,AUDIO="233"
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/def/itag/231/aud/plain/playlist/index.m3u8

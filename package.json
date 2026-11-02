@@ -1,0 +1,19 @@
+{
+  "name": "spelare",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check-build": "node scripts/build.mjs --check",
+    "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "@babel/generator": "^7.29.12",
+    "@babel/parser": "^7.29.12",
+    "@babel/traverse": "^7.29.12",
+    "@babel/types": "^7.29.11",
+    "acorn": "^8.19.0",
+    "esbuild": "^0.25.12",
+    "prettier": "^3.9.10"
+  }
+}

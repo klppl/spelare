@@ -1,0 +1,96 @@
+:root {
+    color-scheme: light dark;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    outline: none;
+    -webkit-user-select: none;
+    cursor: default;
+}
+
+body {
+    padding: 20px 30px;
+    font: -apple-system-body;
+    color: -apple-system-label;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table tr {
+    border-top: 1px solid -apple-system-separator;
+}
+
+table tr:first-of-type {
+    border-top: none;
+}
+
+table tr td {
+    padding: 15px 0;
+    vertical-align: top;
+}
+
+table tr:first-of-type td {
+    padding-top: 0;
+}
+
+table tr:last-of-type td {
+    padding-bottom: 0;
+}
+
+table tr td:first-of-type {
+    padding-right: 10px;
+}
+
+table tr td:first-of-type p {
+    display: block;
+    text-align: right;
+    white-space: nowrap;
+}
+
+table tr td .field {
+    margin-top: 5px;
+    white-space: nowrap;
+}
+
+table tr td .field:first-of-type {
+    margin-top: 0;
+}
+
+table tr td .field input[type="checkbox"] {
+    display: inline-block;
+    height: 14px;
+    width: 14px;
+    margin-right: 5px;
+}
+
+table tr td .field label {
+    display: inline-block;
+}
+
+table tr td .field select {
+    font-size: large;
+}
+
+table tr td .field button {
+    padding: 3px 6px 2px;
+    font-size: inherit;
+}
+
+table tr td .field .note {
+    margin-top: 5px;
+    font: -apple-system-subheadline;
+    white-space: normal;
+}
+
+pre {
+    width: 60ch;
+    font-family: ui-monospace, monospace;
+    word-break: break-all;
+    white-space: pre-wrap;
+    -webkit-user-select: auto;
+}

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- tread is dropped at 1x sizes, where it turns to mush -->
+  <circle cx="8" cy="8" r="6.4" fill="none" stroke="#000" stroke-width="2.4"/>
+  <path d="M6.7 5.5 L6.7 10.5 L10.6 8 Z" fill="#000" stroke="#000" stroke-width="0.6" stroke-linejoin="round"/>
+</svg>

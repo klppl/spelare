@@ -1,0 +1,10 @@
+{
+    "extension_name": {
+        "message": "Spelare",
+        "description": "The display name for the extension."
+    },
+    "extension_description": {
+        "message": "Plays YouTube in Safari's own video player and hides the ads and clutter around it.",
+        "description": "Description of what the extension does."
+    }
+}

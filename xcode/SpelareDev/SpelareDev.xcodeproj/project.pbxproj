@@ -1,0 +1,654 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FA7B43F23097CE260046CF3D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B43F13097CE260046CF3D /* AppDelegate.swift */; };
+		FA7B43F63097CE260046CF3D /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = FA7B43F43097CE260046CF3D /* Main.html */; };
+		FA7B43F83097CE260046CF3D /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = FA7B43F73097CE260046CF3D /* Icon.png */; };
+		FA7B43FA3097CE260046CF3D /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = FA7B43F93097CE260046CF3D /* Style.css */; };
+		FA7B43FC3097CE260046CF3D /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = FA7B43FB3097CE260046CF3D /* Script.js */; };
+		FA7B43FE3097CE260046CF3D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B43FD3097CE260046CF3D /* ViewController.swift */; };
+		FA7B44013097CE260046CF3D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FA7B43FF3097CE260046CF3D /* Main.storyboard */; };
+		FA7B44033097CE270046CF3D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44023097CE270046CF3D /* Assets.xcassets */; };
+		FA7B440A3097CE270046CF3D /* SpelareDev Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FA7B44093097CE270046CF3D /* SpelareDev Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FA7B440F3097CE270046CF3D /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7B440E3097CE270046CF3D /* SafariWebExtensionHandler.swift */; };
+		FA7B44263097CE270046CF3D /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = FA7B441B3097CE270046CF3D /* popup.js */; };
+		FA7B44273097CE270046CF3D /* mac.css in Resources */ = {isa = PBXBuildFile; fileRef = FA7B441C3097CE270046CF3D /* mac.css */; };
+		FA7B44283097CE270046CF3D /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = FA7B441D3097CE270046CF3D /* background.js */; };
+		FA7B44293097CE270046CF3D /* images in Resources */ = {isa = PBXBuildFile; fileRef = FA7B441E3097CE270046CF3D /* images */; };
+		FA7B442A3097CE270046CF3D /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = FA7B441F3097CE270046CF3D /* popup.html */; };
+		FA7B442B3097CE270046CF3D /* shorts.js in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44203097CE270046CF3D /* shorts.js */; };
+		FA7B442C3097CE270046CF3D /* mac.js in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44213097CE270046CF3D /* mac.js */; };
+		1A0B5E0D3097CE270046CF3D /* observer.js in Resources */ = {isa = PBXBuildFile; fileRef = 1A0B5E0E3097CE270046CF3D /* observer.js */; };
+		FA7B442D3097CE270046CF3D /* override.js in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44223097CE270046CF3D /* override.js */; };
+		FA7B442E3097CE270046CF3D /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44233097CE270046CF3D /* manifest.json */; };
+		FA7B442F3097CE270046CF3D /* popup.css in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44243097CE270046CF3D /* popup.css */; };
+		FA7B44303097CE270046CF3D /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = FA7B44253097CE270046CF3D /* _locales */; };
+		5B0A11013097CE270046CF3D /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 5B0A11023097CE270046CF3D /* Sparkle */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FA7B440B3097CE270046CF3D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FA7B43E63097CE260046CF3D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FA7B44083097CE270046CF3D;
+			remoteInfo = "SpelareDev Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FA7B44163097CE270046CF3D /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				FA7B440A3097CE270046CF3D /* SpelareDev Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		FA7B43EE3097CE260046CF3D /* SpelareDev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpelareDev.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA7B43F13097CE260046CF3D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		FA7B43F53097CE260046CF3D /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		FA7B43F73097CE260046CF3D /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		FA7B43F93097CE260046CF3D /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		FA7B43FB3097CE260046CF3D /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		FA7B43FD3097CE260046CF3D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		FA7B44003097CE260046CF3D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		FA7B44023097CE270046CF3D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FA7B44043097CE270046CF3D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FA7B44093097CE270046CF3D /* SpelareDev Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "SpelareDev Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA7B440E3097CE270046CF3D /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		FA7B44103097CE270046CF3D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FA7B441B3097CE270046CF3D /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../../extension/popup.js; sourceTree = "<group>"; };
+		FA7B441C3097CE270046CF3D /* mac.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = mac.css; path = ../../../extension/mac.css; sourceTree = "<group>"; };
+		FA7B441D3097CE270046CF3D /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../../../extension/background.js; sourceTree = "<group>"; };
+		FA7B441E3097CE270046CF3D /* images */ = {isa = PBXFileReference; lastKnownFileType = folder; name = images; path = ../../../extension/images; sourceTree = "<group>"; };
+		FA7B441F3097CE270046CF3D /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../../extension/popup.html; sourceTree = "<group>"; };
+		FA7B44203097CE270046CF3D /* shorts.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = shorts.js; path = ../../../extension/shorts.js; sourceTree = "<group>"; };
+		FA7B44213097CE270046CF3D /* mac.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = mac.js; path = ../../../extension/mac.js; sourceTree = "<group>"; };
+		1A0B5E0E3097CE270046CF3D /* observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = observer.js; path = ../../../extension/observer.js; sourceTree = "<group>"; };
+		FA7B44223097CE270046CF3D /* override.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = override.js; path = ../../../extension/override.js; sourceTree = "<group>"; };
+		FA7B44233097CE270046CF3D /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../../extension/manifest.json; sourceTree = "<group>"; };
+		FA7B44243097CE270046CF3D /* popup.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = popup.css; path = ../../../extension/popup.css; sourceTree = "<group>"; };
+		FA7B44253097CE270046CF3D /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../../extension/_locales; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FA7B43EB3097CE260046CF3D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				5B0A11013097CE270046CF3D /* Sparkle in Frameworks */,
+			);
+		};
+		FA7B44063097CE270046CF3D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FA7B43E53097CE260046CF3D = {
+			isa = PBXGroup;
+			children = (
+				FA7B43F03097CE260046CF3D /* SpelareDev */,
+				FA7B440D3097CE270046CF3D /* SpelareDev Extension */,
+				FA7B43EF3097CE260046CF3D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FA7B43EF3097CE260046CF3D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FA7B43EE3097CE260046CF3D /* SpelareDev.app */,
+				FA7B44093097CE270046CF3D /* SpelareDev Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FA7B43F03097CE260046CF3D /* SpelareDev */ = {
+			isa = PBXGroup;
+			children = (
+				FA7B43F13097CE260046CF3D /* AppDelegate.swift */,
+				FA7B43FD3097CE260046CF3D /* ViewController.swift */,
+				FA7B43FF3097CE260046CF3D /* Main.storyboard */,
+				FA7B44023097CE270046CF3D /* Assets.xcassets */,
+				FA7B44043097CE270046CF3D /* Info.plist */,
+				FA7B43F33097CE260046CF3D /* Resources */,
+			);
+			path = SpelareDev;
+			sourceTree = "<group>";
+		};
+		FA7B43F33097CE260046CF3D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				FA7B43F43097CE260046CF3D /* Main.html */,
+				FA7B43F73097CE260046CF3D /* Icon.png */,
+				FA7B43F93097CE260046CF3D /* Style.css */,
+				FA7B43FB3097CE260046CF3D /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		FA7B440D3097CE270046CF3D /* SpelareDev Extension */ = {
+			isa = PBXGroup;
+			children = (
+				FA7B441A3097CE270046CF3D /* Resources */,
+				FA7B440E3097CE270046CF3D /* SafariWebExtensionHandler.swift */,
+				FA7B44103097CE270046CF3D /* Info.plist */,
+			);
+			path = "SpelareDev Extension";
+			sourceTree = "<group>";
+		};
+		FA7B441A3097CE270046CF3D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				FA7B441B3097CE270046CF3D /* popup.js */,
+				FA7B441C3097CE270046CF3D /* mac.css */,
+				FA7B441D3097CE270046CF3D /* background.js */,
+				FA7B441E3097CE270046CF3D /* images */,
+				FA7B441F3097CE270046CF3D /* popup.html */,
+				FA7B44203097CE270046CF3D /* shorts.js */,
+				FA7B44213097CE270046CF3D /* mac.js */,
+				1A0B5E0E3097CE270046CF3D /* observer.js */,
+				FA7B44223097CE270046CF3D /* override.js */,
+				FA7B44233097CE270046CF3D /* manifest.json */,
+				FA7B44243097CE270046CF3D /* popup.css */,
+				FA7B44253097CE270046CF3D /* _locales */,
+			);
+			name = Resources;
+			path = "SpelareDev Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FA7B43ED3097CE260046CF3D /* SpelareDev */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA7B44173097CE270046CF3D /* Build configuration list for PBXNativeTarget "SpelareDev" */;
+			buildPhases = (
+				FA7B43EA3097CE260046CF3D /* Sources */,
+				FA7B43EB3097CE260046CF3D /* Frameworks */,
+				FA7B43EC3097CE260046CF3D /* Resources */,
+				FA7B44163097CE270046CF3D /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FA7B440C3097CE270046CF3D /* PBXTargetDependency */,
+			);
+			name = SpelareDev;
+			packageProductDependencies = (
+				5B0A11023097CE270046CF3D /* Sparkle */,
+			);
+			productName = SpelareDev;
+			productReference = FA7B43EE3097CE260046CF3D /* SpelareDev.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FA7B44083097CE270046CF3D /* SpelareDev Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA7B44133097CE270046CF3D /* Build configuration list for PBXNativeTarget "SpelareDev Extension" */;
+			buildPhases = (
+				FA7B44053097CE270046CF3D /* Sources */,
+				FA7B44063097CE270046CF3D /* Frameworks */,
+				FA7B44073097CE270046CF3D /* Resources */,
+			);
+			buildRules = (
+			);
+			name = "SpelareDev Extension";
+			productName = "SpelareDev Extension";
+			productReference = FA7B44093097CE270046CF3D /* SpelareDev Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FA7B43E63097CE260046CF3D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2710;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					FA7B43ED3097CE260046CF3D = {
+						CreatedOnToolsVersion = 27.1;
+					};
+					FA7B44083097CE270046CF3D = {
+						CreatedOnToolsVersion = 27.1;
+					};
+				};
+			};
+			buildConfigurationList = FA7B43E93097CE260046CF3D /* Build configuration list for PBXProject "SpelareDev" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FA7B43E53097CE260046CF3D;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5B0A11033097CE270046CF3D /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FA7B43EF3097CE260046CF3D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FA7B43ED3097CE260046CF3D /* SpelareDev */,
+				FA7B44083097CE270046CF3D /* SpelareDev Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FA7B43EC3097CE260046CF3D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				FA7B43F83097CE260046CF3D /* Icon.png in Resources */,
+				FA7B44013097CE260046CF3D /* Main.storyboard in Resources */,
+				FA7B43FC3097CE260046CF3D /* Script.js in Resources */,
+				FA7B43F63097CE260046CF3D /* Main.html in Resources */,
+				FA7B44033097CE270046CF3D /* Assets.xcassets in Resources */,
+				FA7B43FA3097CE260046CF3D /* Style.css in Resources */,
+			);
+		};
+		FA7B44073097CE270046CF3D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				FA7B442F3097CE270046CF3D /* popup.css in Resources */,
+				FA7B44293097CE270046CF3D /* images in Resources */,
+				FA7B442B3097CE270046CF3D /* shorts.js in Resources */,
+				FA7B442A3097CE270046CF3D /* popup.html in Resources */,
+				FA7B44263097CE270046CF3D /* popup.js in Resources */,
+				FA7B442E3097CE270046CF3D /* manifest.json in Resources */,
+				FA7B44283097CE270046CF3D /* background.js in Resources */,
+				FA7B442C3097CE270046CF3D /* mac.js in Resources */,
+				1A0B5E0D3097CE270046CF3D /* observer.js in Resources */,
+				FA7B442D3097CE270046CF3D /* override.js in Resources */,
+				FA7B44303097CE270046CF3D /* _locales in Resources */,
+				FA7B44273097CE270046CF3D /* mac.css in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FA7B43EA3097CE260046CF3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				FA7B43FE3097CE260046CF3D /* ViewController.swift in Sources */,
+				FA7B43F23097CE260046CF3D /* AppDelegate.swift in Sources */,
+			);
+		};
+		FA7B44053097CE270046CF3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				FA7B440F3097CE270046CF3D /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FA7B440C3097CE270046CF3D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FA7B44083097CE270046CF3D /* SpelareDev Extension */;
+			targetProxy = FA7B440B3097CE270046CF3D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		FA7B43F43097CE260046CF3D /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FA7B43F53097CE260046CF3D /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		FA7B43FF3097CE260046CF3D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FA7B44003097CE260046CF3D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		FA7B44113097CE270046CF3D /* Debug configuration for PBXProject "SpelareDev" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		FA7B44123097CE270046CF3D /* Release configuration for PBXProject "SpelareDev" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		FA7B44143097CE270046CF3D /* Debug configuration for PBXNativeTarget "SpelareDev Extension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SpelareDev Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "SpelareDev Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.klippelism.spelare-dev.Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FA7B44153097CE270046CF3D /* Release configuration for PBXNativeTarget "SpelareDev Extension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SpelareDev Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Spelare Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.klippelism.spelare.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FA7B44183097CE270046CF3D /* Debug configuration for PBXNativeTarget "SpelareDev" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpelareDev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SpelareDev;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
+				CODE_SIGN_ENTITLEMENTS = SpelareDev/SpelareDev.entitlements;
+				SPARKLE_FEED_URL = "";
+				SPARKLE_PUBLIC_ED_KEY = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.klippelism.spelare-dev";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FA7B44193097CE270046CF3D /* Release configuration for PBXNativeTarget "SpelareDev" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpelareDev/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Spelare;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				INFOPLIST_KEY_NSViewGestureRecognizerIsExclusive = NO;
+				CODE_SIGN_ENTITLEMENTS = SpelareDev/SpelareDev.entitlements;
+				SPARKLE_FEED_URL = "";
+				SPARKLE_PUBLIC_ED_KEY = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.klippelism.spelare;
+				PRODUCT_NAME = Spelare;
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FA7B43E93097CE260046CF3D /* Build configuration list for PBXProject "SpelareDev" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA7B44113097CE270046CF3D /* Debug configuration for PBXProject "SpelareDev" */,
+				FA7B44123097CE270046CF3D /* Release configuration for PBXProject "SpelareDev" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		FA7B44133097CE270046CF3D /* Build configuration list for PBXNativeTarget "SpelareDev Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA7B44143097CE270046CF3D /* Debug configuration for PBXNativeTarget "SpelareDev Extension" */,
+				FA7B44153097CE270046CF3D /* Release configuration for PBXNativeTarget "SpelareDev Extension" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		FA7B44173097CE270046CF3D /* Build configuration list for PBXNativeTarget "SpelareDev" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA7B44183097CE270046CF3D /* Debug configuration for PBXNativeTarget "SpelareDev" */,
+				FA7B44193097CE270046CF3D /* Release configuration for PBXNativeTarget "SpelareDev" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5B0A11033097CE270046CF3D /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5B0A11023097CE270046CF3D /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5B0A11033097CE270046CF3D /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FA7B43E63097CE260046CF3D /* Project object */;
+	validationLevel = 1;
+}
