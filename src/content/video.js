@@ -4,7 +4,8 @@ import { setupPlaybackPrefs } from "./playback-prefs.js";
 import { log } from "./log.js";
 import { ownsMediaSession, setupMediaSession } from "./media-session.js";
 import { callPlayer } from "./player.js";
-import { playNextVideo } from "./playback.js";
+import { playNextVideo, setupDoubleClickFullscreen } from "./playback.js";
+import { reportPlayerState } from "./player-state.js";
 import { setupPlaybackRecovery } from "./recovery.js";
 import { settings } from "./state.js";
 import { applyToolbarVisibility, createToolbar } from "./toolbar.js";
@@ -29,6 +30,8 @@ export function setupVideo(video) {
   callPlayer("silence");
   syncHiddenPlayerProgress(video);
   setupMediaSession(video);
+  setupDoubleClickFullscreen(video);
+  reportPlayerState("spelare");
 }
 export function syncHiddenPlayerProgress(video) {
   log("updateProgress");

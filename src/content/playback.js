@@ -68,3 +68,24 @@ export function playNextVideo() {
   log("nextVideo");
   callPlayer("nextVideo");
 }
+// Height of the bands at the top and bottom of the video where Safari draws
+// its own controls (full screen, Picture in Picture and sound at the top,
+// the play bar at the bottom), plus a little margin.
+export const CONTROLS_BAND_PX = 48;
+
+// Whether a point `y` pixels from the video's top is on Safari's controls,
+// where a double-click means fast clicks on a button, not full screen.
+export function isOnControls(y, height) {
+  return y < CONTROLS_BAND_PX || y > height - CONTROLS_BAND_PX;
+}
+
+// Double-clicking the picture toggles full screen, as on YouTube. Clicks on
+// Safari's controls (and so our own, which sit in the top band) don't count.
+export function setupDoubleClickFullscreen(video) {
+  video.addEventListener("dblclick", (event) => {
+    const { top, height } = video.getBoundingClientRect();
+    if (isOnControls(event.clientY - top, height)) return;
+    event.preventDefault();
+    toggleFullscreen(video);
+  });
+}

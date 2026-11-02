@@ -182,15 +182,25 @@ export function captionTracksFrom(data) {
       })
     : [];
 }
-// Title and channel name from a player response for `videoId`, or null.
+// From a player response for `videoId`: title and channel name (Now
+// Playing), channel id (per-channel speed) and loudness in dB above YouTube's
+// target level (volume levelling). Null if it's for another video.
 export function videoDetailsFrom(data, videoId) {
   const details = data?.videoDetails;
   if (details?.videoId !== videoId || typeof details.title !== "string")
     return null;
+  const loudnessDb = data?.playerConfig?.audioConfig?.loudnessDb;
   return {
     title: details.title.slice(0, 500),
     author:
       typeof details.author === "string" ? details.author.slice(0, 200) : "",
+    channelId: /^UC[\w-]{22}$/.test(details.channelId)
+      ? details.channelId
+      : null,
+    loudnessDb:
+      Number.isFinite(loudnessDb) && Math.abs(loudnessDb) <= 60
+        ? loudnessDb
+        : null,
   };
 }
 // Player request as the ANDROID app, whose responses include caption tracks.

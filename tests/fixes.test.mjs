@@ -41,7 +41,14 @@ test('nowPlayingMetadata uses the player response details, else the page title',
 
 test('videoDetailsFrom only trusts details for the requested video', () => {
     const data = { videoDetails: { videoId: 'abc', title: 'T'.repeat(600), author: 42 } };
-    assert.deepEqual(videoDetailsFrom(data, 'abc'), { title: 'T'.repeat(500), author: '' });
+    assert.deepEqual(videoDetailsFrom(data, 'abc'), { title: 'T'.repeat(500), author: '', channelId: null, loudnessDb: null });
+    const full = {
+        videoDetails: { videoId: 'abc', title: 'T', author: 'A', channelId: 'UCuAXFkgsw1L7xaCfnd5JJOw' },
+        playerConfig: { audioConfig: { loudnessDb: 4.5 } },
+    };
+    assert.deepEqual(videoDetailsFrom(full, 'abc'), { title: 'T', author: 'A', channelId: 'UCuAXFkgsw1L7xaCfnd5JJOw', loudnessDb: 4.5 });
+    const odd = { videoDetails: { videoId: 'abc', title: 'T', channelId: 'not-a-channel' }, playerConfig: { audioConfig: { loudnessDb: 900 } } };
+    assert.deepEqual(videoDetailsFrom(odd, 'abc'), { title: 'T', author: '', channelId: null, loudnessDb: null });
     assert.equal(videoDetailsFrom(data, 'other'), null);
     assert.equal(videoDetailsFrom({}, 'abc'), null);
 });

@@ -32,15 +32,15 @@
   - [x] `q` / Shift-Q cycles through qualities.
   - [x] The popup changes the current tab's quality right away, without a reload.
   - [ ] Show which quality was picked while in fullscreen (the toolbar isn't visible there).
-- [ ] **Double-click for fullscreen.** Only when both clicks land on the video area (not the native
+- [x] **Double-click for fullscreen.** Only when both clicks land on the video area (not the native
   controls) and close together in time, so fast clicks on the controls don't trigger it.
 
 ## Playback
 
-- [x] **Remember volume and speed** (globally, per device).
-- [ ] Per-channel speed (e.g. podcasts at 1.5×, music at 1×).
+- [x] **Remember volume and speed** (per device: volume for every video, speed per channel).
+- [x] Per-channel speed (e.g. podcasts at 1.5×, music at 1×).
 - [ ] **Resume where you left off**, using YouTube's saved position instead of only `t=`.
-- [ ] **Volume levelling.** The player response includes each video's loudness; turn loud videos down
+- [x] **Volume levelling.** The player response includes each video's loudness; turn loud videos down
   to an even level.
 - [ ] **Audio-language picker.** Dubbed tracks are always filtered out today; let people choose one.
 
@@ -56,7 +56,7 @@ Each one a setting in the popup, similar to Unhook.
 
 ## Polish
 
-- [ ] **Toolbar badge** showing whether Spelare, YouTube's fallback player or nothing is playing in the
+- [x] **Toolbar badge** showing whether Spelare, YouTube's fallback player or nothing is playing in the
   current tab.
 - [x] **Settings apply without a reload.**
 - [ ] **Translate** the popup and the on-player toolbar (`_locales` only has English, and the popup

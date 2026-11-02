@@ -38,11 +38,16 @@ function loadBackground() {
         browser: {
             runtime: { onMessage: { addListener: (fn) => { listener = fn; } } },
             tabs: { onRemoved: { addListener: (fn) => { onRemoved = fn; } } },
+            action: {
+                setBadgeText: (details) => actions.push(['badge', details]),
+                setTitle: (details) => actions.push(['title', details]),
+            },
         },
         Promise,
     });
+    const actions = [];
     vm.runInContext(fs.readFileSync(new URL('../extension/background.js', import.meta.url), 'utf8'), context);
-    return { listener, onRemoved };
+    return { listener, onRemoved, actions };
 }
 
 test('background.js records every entry of a batch', async () => {
@@ -65,4 +70,18 @@ test('background.js keeps a log per tab, cleared by that tab and when it closes'
     onRemoved(1);
     assert.deepEqual(await logsOf(1), []);
     assert.deepEqual(await logsOf(undefined), [], 'no tab, no log');
+});
+
+test('background.js shows each tab\'s player state on the toolbar button, kept short', () => {
+    const { listener, actions } = loadBackground();
+    listener({ type: 'player-state', text: '1080', title: 'Spelare is playing this video (1080p)' }, { tab: { id: 4 } });
+    listener({ type: 'player-state', text: 'way too long', title: 'x'.repeat(500) }, { tab: { id: 5 } });
+    listener({ type: 'player-state', text: 42, title: 'bad' }, { tab: { id: 6 } });
+    listener({ type: 'player-state', text: '!', title: 'no tab' }, {});
+    assert.deepEqual(JSON.parse(JSON.stringify(actions)), [
+        ['badge', { tabId: 4, text: '1080' }],
+        ['title', { tabId: 4, title: 'Spelare is playing this video (1080p)' }],
+        ['badge', { tabId: 5, text: 'way ' }],
+        ['title', { tabId: 5, title: 'x'.repeat(200) }],
+    ]);
 });

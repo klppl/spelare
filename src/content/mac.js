@@ -14,6 +14,7 @@ import {
 } from "../shared/page-messages.js";
 import { setupLiveSettings } from "./live-settings.js";
 import { injectPageScript } from "./page.js";
+import { reportPlayerState } from "./player-state.js";
 import { applyHideSettings } from "./page-cleanup.js";
 import { setupHideGuard } from "./hide-guard.js";
 import { loadPlaybackPrefs } from "./playback-prefs.js";
@@ -123,6 +124,7 @@ function handleURLChange() {
     videoState.playlistContent = null;
     videoState.streams = {};
     removeSpelareVideos();
+    reportPlayerState("none");
     processCandidates();
   }
 }
@@ -145,6 +147,8 @@ function removeSpelareVideos() {
       type: "clear-logs",
     });
   log("load:", location.href);
+  // Nothing plays yet on a newly loaded page; clears the last page's badge.
+  reportPlayerState("none");
   const isTopFrame =
     window.top === window && location.hostname === "www.youtube.com";
   log("injectPageScript");

@@ -8,7 +8,7 @@ import vm from 'node:vm';
 import './helpers/browser-globals.mjs';
 import { captionTrackToShow } from '../src/content/captions.js';
 import { listenForSettingChanges, settings, settingValue } from '../src/content/state.js';
-import { validPrefs } from '../src/content/playback-prefs.js';
+import { levelFactor, MAX_CHANNELS, rememberChannelRate, validPrefs } from '../src/content/playback-prefs.js';
 import { nextQuality } from '../src/content/toolbar.js';
 
 const LABELS = ['English', 'German', 'Auto-translated (Swedish)'];
@@ -53,12 +53,34 @@ test('listenForSettingChanges updates settings and reports what changed', () => 
     }
 });
 
-test('validPrefs accepts only volumes and speeds Spelare could have saved', () => {
-    assert.deepEqual(validPrefs({ volume: 0.4, playbackRate: 1.5 }), { volume: 0.4, playbackRate: 1.5 });
-    assert.deepEqual(validPrefs({}), { volume: 1, playbackRate: 1 });
-    assert.deepEqual(validPrefs({ volume: 7, playbackRate: 16 }), { volume: 1, playbackRate: 1 });
-    assert.deepEqual(validPrefs({ volume: '0.5', playbackRate: NaN }), { volume: 1, playbackRate: 1 });
-    assert.deepEqual(validPrefs(undefined), { volume: 1, playbackRate: 1 });
+test('validPrefs keeps only volumes and per-channel speeds Spelare could have saved', () => {
+    const channel = 'UCuAXFkgsw1L7xaCfnd5JJOw';
+    assert.deepEqual(validPrefs({ volume: 0.4, speedByChannel: { [channel]: 1.5 } }), { volume: 0.4, speedByChannel: { [channel]: 1.5 } });
+    assert.deepEqual(validPrefs({}), { volume: 1, speedByChannel: {} });
+    assert.deepEqual(validPrefs({ volume: 7, speedByChannel: { [channel]: 16, nope: 1.5 } }), { volume: 1, speedByChannel: {} });
+    assert.deepEqual(validPrefs({ volume: '0.5', speedByChannel: 'x' }), { volume: 1, speedByChannel: {} });
+    assert.deepEqual(validPrefs(undefined), { volume: 1, speedByChannel: {} });
+});
+
+test('levelFactor turns loud videos down by their loudness, and leaves quiet ones', () => {
+    assert.equal(levelFactor(0), 1);
+    assert.equal(levelFactor(-6), 1, 'quieter than the target: not raised');
+    assert.ok(Math.abs(levelFactor(6) - 0.501) < 0.001, '+6 dB: about half');
+    assert.equal(levelFactor(60), 0.1, 'never below a tenth');
+    assert.equal(levelFactor(null), 1);
+});
+
+test('rememberChannelRate keeps the most recent channels, dropping 1x', () => {
+    const speeds = {};
+    rememberChannelRate(speeds, 'UCa', 1.5);
+    rememberChannelRate(speeds, 'UCb', 2);
+    rememberChannelRate(speeds, 'UCa', 1.25);
+    assert.deepEqual(Object.entries(speeds), [['UCb', 2], ['UCa', 1.25]], 'a changed channel becomes the newest');
+    rememberChannelRate(speeds, 'UCb', 1);
+    assert.deepEqual(speeds, { UCa: 1.25 }, '1x is the default, so it isn\'t stored');
+    for (let i = 0; i < MAX_CHANNELS + 5; i += 1) rememberChannelRate(speeds, `UC${i}`, 1.5);
+    assert.equal(Object.keys(speeds).length, MAX_CHANNELS);
+    assert.ok(!('UCa' in speeds), 'the oldest went first');
 });
 
 test('nextQuality cycles through Auto and the video\'s qualities, skipping Sound only', () => {

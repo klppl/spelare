@@ -10,6 +10,8 @@ const STORED_SETTINGS = {
   // YouTube's code for Japanese is ja, not jp.
   quality: { key: "quality", fallback: "auto", legacy: { highres: "auto" } },
   showToolbar: { key: "showToolbar", fallback: true },
+  // Turn loud videos down to YouTube's target level (playback-prefs.js).
+  evenLoudness: { key: "evenLoudness", fallback: true },
   captionsOnByDefault: { key: "showCaption", fallback: false },
   translationLanguage: {
     key: "subtitles",

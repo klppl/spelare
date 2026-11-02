@@ -3,6 +3,7 @@
 // over to play a newly picked default quality now.
 import { setupCaptions } from "./captions.js";
 import { applyHideSettings, HIDE_ATTRIBUTES } from "./page-cleanup.js";
+import { applyVolume } from "./playback-prefs.js";
 import { listenForSettingChanges } from "./state.js";
 import {
   applyToolbarVisibility,
@@ -31,6 +32,7 @@ export function setupLiveSettings() {
   // quality picked in another tab only applies to the next video.
   listenForSettingChanges((name) => {
     if (name === "showToolbar") applyToolbarVisibility();
+    else if (name === "evenLoudness") applyVolume();
     else if (Object.hasOwn(HIDE_ATTRIBUTES, name)) applyHideSettings();
     else if (name === "translationLanguage") {
       const video = spelareVideo();

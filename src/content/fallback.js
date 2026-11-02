@@ -5,6 +5,7 @@ import { settings, videoState } from "./state.js";
 import { applyToolbarVisibility, createToolbar } from "./toolbar.js";
 import { currentVideoId, startTimeFromNavigation } from "./url.js";
 import { pollFor } from "../shared/poll.js";
+import { reportPlayerState } from "./player-state.js";
 
 const YOUTUBE_ERROR = "youtube-error";
 
@@ -26,6 +27,7 @@ export function fallbackToYouTube(
   );
   if (releaseVideo) video.remove();
   showFallbackNotice("Fallback", notice);
+  reportPlayerState("fallback");
   callPlayer("fallBack", {
     videoId: currentVideoId(),
     startTime,

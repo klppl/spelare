@@ -14,6 +14,8 @@ import { setBounded } from "./bounded-map.js";
 import { setVideoSource, switchVideoSource } from "./source.js";
 import { ownsMediaSession, updateNowPlaying } from "./media-session.js";
 import { setupVideo } from "./video.js";
+import { applyVideoDetails } from "./playback-prefs.js";
+import { reportPlayerState } from "./player-state.js";
 
 export function setupStreams(video, audioURL = null) {
   log("setBasicQuality");
@@ -67,6 +69,7 @@ export function handleUnplayableStream(video) {
       switchVideoSource(video, videoState.streams.auto, { pauseFirst: false });
       const qualityButton = document.querySelector("#spelare-toolbar .quality");
       if (qualityButton) qualityButton.textContent = "Auto";
+      reportPlayerState("spelare");
     } else fallbackToYouTube(video);
   });
 }
@@ -227,6 +230,7 @@ export async function swapInVideo(candidate, playerInfoPromise, audioURL) {
       return;
     if (details) {
       videoState.details = details;
+      applyVideoDetails(details);
       // If YouTube has taken Now Playing over, the next timeupdate takes it
       // back (handlers included) with these details.
       if (ownsMediaSession()) updateNowPlaying();

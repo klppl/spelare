@@ -6,6 +6,7 @@ import {
   qualityLabel,
 } from "./qualities.js";
 import { switchVideoSource } from "./source.js";
+import { reportPlayerState } from "./player-state.js";
 import { settings, videoState } from "./state.js";
 
 // A toolbar button. Mouse clicks don't focus it, so Space and the other
@@ -140,6 +141,7 @@ export function setQuality(video, quality, { save = false } = {}) {
   }
   const button = document.querySelector("#spelare-toolbar .controls .quality");
   if (button) button.textContent = qualityLabel(quality);
+  reportPlayerState("spelare");
   return true;
 }
 export function closeQualityPicker(toolbar, label) {

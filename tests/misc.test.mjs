@@ -64,6 +64,7 @@ test('settings defaults', () => {
         autoplay: false,
         quality: 'auto',
         showToolbar: true,
+        evenLoudness: true,
         captionsOnByDefault: false,
         translationLanguage: 'system',
         hideShorts: false,
@@ -130,13 +131,14 @@ test('loadSettings reads the popup\'s storage keys into the settings names', asy
     try {
         await loadSettings();
         assert.deepEqual([...requested].sort(), [
-            'autoplay', 'hideComments', 'hideEndScreens', 'hideRecommendations', 'hideShorts',
+            'autoplay', 'evenLoudness', 'hideComments', 'hideEndScreens', 'hideRecommendations', 'hideShorts',
             'quality', 'showCaption', 'showToolbar', 'subtitles',
         ]);
         assert.deepEqual(plain(settings), {
             autoplay: true,
             quality: 'auto',
             showToolbar: false,
+            evenLoudness: true,
             captionsOnByDefault: true,
             translationLanguage: 'de',
             hideShorts: true,

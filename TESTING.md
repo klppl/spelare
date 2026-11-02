@@ -53,12 +53,18 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
    no "pageObserver: did not start", and the video fills the player (also after resizing the window).
 2. Quality picker: switch to 720p, then Auto, then Sound only; position and play state are kept.
    Theater turns theater mode on and off (so does `t`), and the button is filled while it's on.
+   Double-clicking the picture toggles full screen; double-clicking Safari's own buttons or play bar
+   doesn't. The Spelare button in Safari's toolbar shows the playing quality (`1080`, `4K`, `Auto`, `♪`),
+   `!` when YouTube's player took over, and nothing on pages without a video; hovering it says which.
 3. Captions: `c` toggles; the "Auto-translated (…)" track exists; a popup language change applies without
    a reload. With "captions on by default", turning captions off then changing quality keeps them off.
    Settings saved before this update (captions on, auto-translate language, toolbar hidden) still apply.
 4. Hotkeys: `j`/`l`, ←/→, `,`/`.` while paused, `k`/space, `m`, `i` (PiP), `f`, `t`, `<`/`>`, `0`–`9`,
    `q`/Shift-Q (quality up/down, also in fullscreen).
-   Volume and speed carry over to the next video and survive a quality change.
+   Volume carries over to the next video; speed carries over to the next video from the same channel
+   (another channel starts at 1×), and both survive a quality change. With "Even out loudness" on, a
+   loud music video plays quieter than a talk video at the same volume; turning it off in the popup
+   brings the music video back to full level at once.
    Changing "Default quality" in the popup switches the open video; "Show quality buttons" applies at once.
 5. `?t=1m30s` link starts at 1:30; clicking a timestamp in the description seeks without reloading.
 6. SPA navigation: click a related video; the old stream is torn down and the new one plays.
