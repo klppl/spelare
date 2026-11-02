@@ -1,5 +1,5 @@
 import { log } from "./log.js";
-import { qualityLabel, youtubeQualityName } from "./qualities.js";
+import { youtubeQualityName } from "./qualities.js";
 import { callPlayer } from "./player.js";
 import { settings, videoState } from "./state.js";
 import { applyToolbarVisibility, createToolbar } from "./toolbar.js";
@@ -26,7 +26,7 @@ export function fallbackToYouTube(
     startTimeFromNavigation(),
   );
   if (releaseVideo) video.remove();
-  showFallbackNotice("Fallback", notice);
+  showFallbackNotice(notice);
   reportPlayerState("fallback");
   callPlayer("fallBack", {
     videoId: currentVideoId(),
@@ -41,19 +41,25 @@ export function fallbackStartTime(position, navigationStartTime) {
     ? position
     : navigationStartTime;
 }
-export function showFallbackNotice(label, message) {
-  const qualityButton = document.querySelector(
-    "#spelare-toolbar .controls .quality",
+// In the controls, Settings (whose qualities no longer apply) gives way to
+// a "YouTube player" button that explains why YouTube's player took over.
+export function showFallbackNotice(message) {
+  const settingsButton = document.querySelector(
+    "#spelare-toolbar .controls .settings",
   );
-  if (!qualityButton) return;
-  const replacement = qualityButton.cloneNode(true);
-  qualityButton.replaceWith(replacement);
-  replacement.textContent = `${qualityLabel(settings.quality)} (${label})`;
-  replacement.addEventListener("click", (event) => {
+  if (!settingsButton) return;
+  const notice = document.createElement("button");
+  notice.type = "button";
+  notice.className = "button fallback";
+  notice.textContent = "YouTube player";
+  notice.title = "Why YouTube's own player is playing";
+  notice.addEventListener("mousedown", (event) => event.preventDefault());
+  notice.addEventListener("click", (event) => {
     event.stopPropagation();
     event.preventDefault();
     alert(message);
   });
+  settingsButton.replaceWith(notice);
 }
 // Falls back to YouTube's player for `videoId`, once its video element
 // exists. Checks once a second until then, and stops if the user navigates

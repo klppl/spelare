@@ -55,5 +55,5 @@
         }
     },
 
-    "permissions": [ "storage" ]
+    "permissions": [ "nativeMessaging", "storage" ]
 }

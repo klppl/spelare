@@ -25,11 +25,11 @@ test('the diagnostic log is shown as text, never parsed as HTML', async () => {
     };
     const logs = ['pageObserver: <img src=x onerror=alert(1)>', 'load: https://www.youtube.com/'];
     const browser = {
-        storage: { sync: { get: () => Promise.resolve({}), set: () => Promise.resolve() } },
+        storage: { sync: { get: () => Promise.resolve({}), set: () => Promise.resolve() }, local: { get: () => Promise.resolve({}), set: () => Promise.resolve() } },
         runtime: { sendMessage: (message) => Promise.resolve(message.type === 'get-logs' && message.tabId === 7 ? { logs } : undefined) },
         tabs: { query: () => Promise.resolve([{ id: 7 }]) },
     };
-    vm.runInContext(fs.readFileSync(new URL('../extension/popup.js', import.meta.url), 'utf8'), vm.createContext({ document, browser, Event: class {} }));
+    vm.runInContext(fs.readFileSync(new URL('../extension/popup.js', import.meta.url), 'utf8'), vm.createContext({ document, browser, Event: class {}, setTimeout }));
     onReady();
     elements.showDebugInfo.listeners.click();
     await new Promise((resolve) => setImmediate(resolve));

@@ -11,7 +11,7 @@ import { setVideoSource, switchVideoSource } from "./source.js";
 import { ownsMediaSession, updateNowPlaying } from "./media-session.js";
 import { setupVideo } from "./video.js";
 import { buildStreams } from "./stream-urls.js";
-import { addAudioButton } from "./toolbar.js";
+import { addChaptersButton } from "./chapters.js";
 import { applyVideoDetails } from "./playback-prefs.js";
 import { reportPlayerState } from "./player-state.js";
 
@@ -61,8 +61,6 @@ export function handleUnplayableStream(video) {
       log("handleUnplayableStream: falling back from audio");
       videoState.activeQuality = "auto";
       switchVideoSource(video, videoState.streams.auto, { pauseFirst: false });
-      const qualityButton = document.querySelector("#spelare-toolbar .quality");
-      if (qualityButton) qualityButton.textContent = "Auto";
       reportPlayerState("spelare");
     } else fallbackToYouTube(video);
   });
@@ -113,7 +111,6 @@ export async function obtainAudioStream(candidate) {
       entry.master = manifest;
       if (candidate.videoId === videoState.videoId) {
         videoState.dubMaster = manifest;
-        addAudioButton();
       }
       const renditionURI = pickAudioRendition(manifest.split("\n"));
       if (!renditionURI)
@@ -234,6 +231,8 @@ export async function swapInVideo(candidate, playerInfoPromise, audioURL) {
       return;
     if (details) {
       videoState.details = details;
+      videoState.chapters = details.chapters;
+      addChaptersButton();
       applyVideoDetails(details);
       // If YouTube has taken Now Playing over, the next timeupdate takes it
       // back (handlers included) with these details.

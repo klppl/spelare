@@ -51,11 +51,15 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
 
 1. Open a `/watch` video: Spelare toolbar appears, video plays natively, no YouTube ads. The console shows
    no "pageObserver: did not start", and the video fills the player (also after resizing the window).
-2. Quality picker: switch to 720p, then Auto, then Sound only; position and play state are kept.
-   Theater turns theater mode on and off (so does `t`), and the button is filled while it's on.
-   On a video with dubbed audio, an Audio button appears: picking a language switches the soundtrack
-   and keeps the position and quality (or the closest one the dub has); Original goes back. Videos
-   without dubs show no Audio button.
+2. Controls: one capsule at the top centre, between Safari's own groups and the same height, showing on
+   pointer movement and while paused. It holds the chapter (only on videos whose description lists
+   chapters, 0:00 …), Settings and Theater; on a narrow player a long chapter title shortens, and the
+   capsule never reaches Safari's volume.
+   Settings → Quality: switch to 720p, then Auto, then Sound only; position and play state are kept.
+   Settings → Audio (only on videos with dubs): a language switches the soundtrack, keeping position and
+   quality (or the closest the dub has); Original goes back.
+   The chapter follows playback; its menu jumps to any chapter. Theater toggles theater mode (so does
+   `t`); its icon is filled while it's on.
    Double-clicking the picture toggles full screen; double-clicking Safari's own buttons or play bar
    doesn't. The Spelare button in Safari's toolbar shows the playing quality (`1080`, `4K`, `Auto`, `♪`),
    `!` when YouTube's player took over, and nothing on pages without a video; hovering it says which.
@@ -79,7 +83,7 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
 8. Shorts: opening `/shorts/…` then navigating to a normal video reloads into the full player.
 9. Embed (`youtube-nocookie.com/embed/…`) and music.youtube.com still play. A watch page opened in a
    background tab plays once you switch to it.
-10. Fallback: when a stream fails, the toolbar shows "… (Fallback)" and YouTube's own player plays; clicking it
+10. Fallback: when a stream fails, the controls show "YouTube player" in place of Settings and YouTube's own player plays; clicking it
     explains why (refused stream, or no stream found).
 11. Popup "Show diagnostic log" lists the log for the session above as plain text, with no errors.
 12. Popup "Show dislike counts": a number appears in YouTube's dislike button on watch pages (and
@@ -89,5 +93,9 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
     brings them back. Playlists and live chat stay in the sidebar. Afterwards the diagnostic log has no
     `hideRules:` lines; each one names elements a rule in `mac.css` missed (`rule missed`), or Shorts that
     were only caught by their links (`hidden by link instead`), so a selector needs adding.
-14. Popup: Japanese auto-translate (`ja`) produces a translated track; a setting saved as Japanese or 4320p by an
+14. iCloud (needs two Macs, or a Mac and a second user, on the same Apple Account): change the default
+    quality in the popup on one; on the other it shows after opening the popup or loading a YouTube page.
+    A channel's speed and where a video was left follow too; volume doesn't. Unticking "Sync settings
+    with iCloud" stops both directions on that device.
+15. Popup: Japanese auto-translate (`ja`) produces a translated track; a setting saved as Japanese or 4320p by an
     older version shows as Japanese / Auto.

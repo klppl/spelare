@@ -15,6 +15,11 @@ Sparkle and Safari's per-extension settings are tied to them.
    `Developer ID Application: … (PGX5N2V7WQ)`. If it's missing, create one in Xcode ▸ Settings ▸
    Accounts ▸ Manage Certificates.
 
+   The extension uses iCloud's key-value store (settings sync), so builds need a provisioning profile.
+   `release.sh` lets Xcode create the Developer ID one (`-allowProvisioningUpdates`); for local Debug
+   builds the Mac must be registered in the developer account (`-allowProvisioningDeviceRegistration`
+   does it once).
+
 2. **Notarization credentials.** Create an app-specific password at
    [account.apple.com](https://account.apple.com) (Sign-In and Security ▸ App-Specific Passwords), then
    store it in the keychain:

@@ -122,6 +122,7 @@ function handleURLChange() {
     videoState.activeQuality = null;
     videoState.response = null;
     videoState.details = null;
+    videoState.chapters = null;
     videoState.captionChoice = undefined;
     videoState.audioLanguage = null;
     videoState.originalAudioURL = null;

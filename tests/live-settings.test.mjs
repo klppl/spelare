@@ -104,7 +104,7 @@ test('the popup asks its tab to play a quality the user picks, not the one it op
     let onReady;
     const sent = [];
     const browser = {
-        storage: { sync: { get: () => Promise.resolve({}), set: () => Promise.resolve() } },
+        storage: { sync: { get: () => Promise.resolve({}), set: () => Promise.resolve() }, local: { get: () => Promise.resolve({}), set: () => Promise.resolve() } },
         runtime: { sendMessage: () => Promise.resolve() },
         tabs: {
             query: () => Promise.resolve([{ id: 3 }]),
@@ -115,7 +115,7 @@ test('the popup asks its tab to play a quality the user picks, not the one it op
         addEventListener: (type, fn) => { if (type === 'DOMContentLoaded') onReady = fn; },
         querySelector: (selector) => element(selector.slice(1)),
     };
-    vm.runInContext(fs.readFileSync(new URL('../extension/popup.js', import.meta.url), 'utf8'), vm.createContext({ document, browser, Event: class {} }));
+    vm.runInContext(fs.readFileSync(new URL('../extension/popup.js', import.meta.url), 'utf8'), vm.createContext({ document, browser, Event: class {}, setTimeout }));
     onReady();
     await new Promise((resolve) => setImmediate(resolve)); // stored settings shown
     elements.quality.value = '720p';

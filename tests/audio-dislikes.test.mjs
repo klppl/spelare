@@ -123,3 +123,17 @@ test('dubs come from the visionOS playlist when the played one has none', async 
         Object.assign(videoState, saved);
     }
 });
+
+test('the Settings menu: Quality, then Audio only for videos with dubs', async () => {
+    const { settingsMenuItems } = await import('../src/content/toolbar.js');
+    const streams = { auto: 'a', '1080p': 'b', '720p': 'c', audio: 'd' };
+    const plain = settingsMenuItems(streams, '1080p', { original: null, dubs: [] }, null);
+    assert.deepEqual(plain.map((item) => item.heading ?? `${item.id}${item.active ? ' ✓' : ''}`), [
+        'Quality', 'quality:auto', 'quality:1080p ✓', 'quality:720p', 'quality:audio',
+    ]);
+    assert.equal(plain.at(-1).separatorBefore, true, 'Sound only set apart');
+    const dubbed = settingsMenuItems(streams, 'auto', { original: 'en', dubs: ['es'] }, 'es');
+    assert.deepEqual(dubbed.slice(5).map((item) => item.heading ?? `${item.id}${item.active ? ' ✓' : ''}`), [
+        'Audio', 'audio:', 'audio:es ✓',
+    ]);
+});

@@ -29,7 +29,7 @@ test('runtime messages are { type: "kebab-case" }, matching what background.js h
         assert.doesNotMatch(source, /sendMessage\(\{\s*message:/, file);
         for (const m of source.matchAll(/sendMessage\(\{\s*type:\s*["']([^"']+)["']/g)) sentTypes.add(m[1]);
     }
-    assert.deepEqual([...sentTypes].sort(), ['clear-logs', 'debug-log', 'get-logs', 'player-state']);
+    assert.deepEqual([...sentTypes].sort(), ['clear-logs', 'debug-log', 'get-logs', 'icloud-pull', 'player-state']);
     const handled = new Set([...read('extension/background.js').matchAll(/request\.type === '([^']+)'/g)].map((m) => m[1]));
     for (const type of [...sentTypes, ...handled]) assert.match(type, /^[a-z]+(-[a-z]+)*$/);
     for (const type of sentTypes) assert.ok(handled.has(type), `background.js doesn't handle ${type}`);
@@ -50,8 +50,8 @@ test('install guards share one window.__spelare namespace', async () => {
     }
 });
 
-test('background.js uses no tab or native APIs, and needs only storage', () => {
+test('background.js uses no tab APIs, and needs only storage and native messaging (iCloud)', () => {
     const background = read('extension/background.js');
-    assert.doesNotMatch(background, /sendNativeMessage|insertCSS|tabs\./);
-    assert.deepEqual(JSON.parse(read('extension/manifest.json')).permissions, ['storage']);
+    assert.doesNotMatch(background, /insertCSS|tabs\./);
+    assert.deepEqual(JSON.parse(read('extension/manifest.json')).permissions, ['nativeMessaging', 'storage']);
 });

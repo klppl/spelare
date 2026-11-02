@@ -42,8 +42,17 @@ function loadBackground() {
                 setBadgeText: (details) => actions.push(['badge', details]),
                 setTitle: (details) => actions.push(['title', details]),
             },
+            storage: {
+                local: { get: async () => ({ icloudSync: false }), set: async () => {} },
+                onChanged: { addListener: () => {} },
+            },
         },
         Promise,
+        console,
+        setTimeout,
+        clearTimeout,
+        Date,
+        JSON,
     });
     const actions = [];
     vm.runInContext(fs.readFileSync(new URL('../extension/background.js', import.meta.url), 'utf8'), context);

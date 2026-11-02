@@ -89,6 +89,8 @@
     videoId: null,
     // Title and channel for Now Playing, once the player response has them.
     details: null,
+    // The video's chapters from its description ([{ start, title }]).
+    chapters: null,
     // The dub picked from the Audio menu (a language code), or null for the
     // original audio; and the original audio-only stream (stream-urls.js).
     audioLanguage: null,
@@ -130,243 +132,100 @@
     });
   }
 
-  // src/shared/hosts.js
-  function isAllowedHost(url, domain) {
-    if (typeof url !== "string") return false;
+  // src/content/resume.js
+  var STORAGE_KEY = "resumePositions";
+  var MAX_VIDEOS = 500;
+  var MIN_DURATION_S = 120;
+  var MIN_POSITION_S = 30;
+  var END_MARGIN_S = 30;
+  var SAVE_EVERY_MS = 1e4;
+  var NOTICE_MS = 8e3;
+  var positions = {};
+  function isResumable(position, duration) {
+    return Number.isFinite(duration) && duration >= MIN_DURATION_S && position >= MIN_POSITION_S && position < duration - END_MARGIN_S && position < duration * 0.95;
+  }
+  function rememberPosition(map, videoId, position) {
+    delete map[videoId];
+    if (position !== null) map[videoId] = Math.floor(position);
+    const ids = Object.keys(map);
+    const excess = Math.max(ids.length - MAX_VIDEOS, 0);
+    for (const old of ids.slice(0, excess)) delete map[old];
+  }
+  function validPositions(stored) {
+    const valid = {};
+    if (stored && typeof stored === "object") {
+      for (const [videoId, position] of Object.entries(stored).slice(-MAX_VIDEOS))
+        if (/^[\w-]{1,64}$/.test(videoId) && Number.isFinite(position) && position > 0)
+          valid[videoId] = position;
+    }
+    return valid;
+  }
+  async function loadResumePositions() {
     try {
-      const { protocol, hostname } = new URL(url);
-      return protocol === "https:" && (hostname === domain || hostname.endsWith(`.${domain}`));
-    } catch {
-      return false;
-    }
-  }
-  var isGooglevideoURL = (url) => isAllowedHost(url, "googlevideo.com");
-  var isYouTubeURL = (url) => isAllowedHost(url, "youtube.com");
-
-  // src/shared/innertube.js
-  var CLIENTS = {
-    ANDROID: {
-      clientName: "ANDROID",
-      clientVersion: "20.10.38",
-      androidSdkVersion: 30,
-      userAgent: "com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip",
-      osName: "Android",
-      osVersion: "11",
-      hl: "en",
-      timeZone: "UTC",
-      utcOffsetMinutes: 0
-    },
-    VISIONOS: {
-      clientName: "VISIONOS",
-      clientVersion: "1.02",
-      deviceMake: "Apple",
-      deviceModel: "RealityDevice17,1",
-      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
-      osName: "visionOS",
-      osVersion: "26.5.23O471"
-    }
-  };
-  var PLAYER_ENDPOINT = "/youtubei/v1/player";
-  function playerRequestBody(videoId, context, contentPlaybackContext = { html5Preference: "HTML5_PREF_WANTS" }) {
-    return {
-      context,
-      videoId,
-      playbackContext: { contentPlaybackContext },
-      contentCheckOk: true,
-      racyCheckOk: true
-    };
-  }
-
-  // src/content/captions.js
-  var AUTO_TRANSLATED_PREFIX = "Auto-translated";
-  function toggleSubtitles(video, enableOnly = false) {
-    log("toggleSubtitles:", enableOnly);
-    const tracks = Array.from(video.textTracks);
-    const showing = tracks.find((track) => track.mode === "showing");
-    const autoTranslated = tracks.find(
-      (track) => track.label.startsWith(AUTO_TRANSLATED_PREFIX)
-    );
-    if (showing) {
-      if (!enableOnly) showing.mode = "disabled";
-    } else if (autoTranslated) autoTranslated.mode = "showing";
-    videoState.captionChoice = showingCaptionLabel(video);
-  }
-  function showingCaptionLabel(video) {
-    return Array.from(video.textTracks).find(
-      (track) => track.kind === "subtitles" && track.mode === "showing"
-    )?.label ?? null;
-  }
-  function captionTrackToShow(choice, labels, captionsOnByDefault) {
-    const autoTranslated = labels.find(
-      (label) => label.startsWith(AUTO_TRANSLATED_PREFIX)
-    );
-    if (choice === void 0)
-      return captionsOnByDefault ? autoTranslated ?? null : null;
-    if (choice === null) return null;
-    return labels.includes(choice) ? choice : autoTranslated ?? null;
-  }
-  var watchedVideos = /* @__PURE__ */ new WeakSet();
-  function watchCaptionChoice(video) {
-    if (watchedVideos.has(video)) return;
-    watchedVideos.add(video);
-    video.textTracks.addEventListener("change", () => {
-      if (!video.querySelector("track[data-spelare-caption]")) return;
-      videoState.captionChoice = showingCaptionLabel(video);
-    });
-  }
-  function applyCaptionChoice(video) {
-    const tracks = Array.from(video.textTracks).filter(
-      (track) => track.kind === "subtitles"
-    );
-    const label = captionTrackToShow(
-      videoState.captionChoice,
-      tracks.map((track) => track.label),
-      settings.captionsOnByDefault
-    );
-    for (const track of tracks)
-      track.mode = track.label === label ? "showing" : "disabled";
-    videoState.captionChoice = label;
-  }
-  function removeCaptionTracks(video) {
-    video.querySelectorAll("track[data-spelare-caption]").forEach((track) => track.remove());
-  }
-  function setupCaptions(video) {
-    log("setupCaptions");
-    let translateSource;
-    const captionTracks = videoState.response?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    if (!captionTracks?.length) return;
-    if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
-      video.addEventListener("loadedmetadata", () => setupCaptions(video), {
-        once: true
-      });
-      return;
-    }
-    removeCaptionTracks(video);
-    captionTracks.forEach((captionTrack) => {
-      const trackElement = document.createElement("track");
-      trackElement.label = captionTrack.name.runs[0].text;
-      trackElement.kind = "subtitles";
-      trackElement.srclang = captionTrack.languageCode;
-      trackElement.src = captionTrackURL(captionTrack.baseUrl);
-      trackElement.setAttribute("data-spelare-caption", "");
-      video.appendChild(trackElement);
-    });
-    const translateLanguage = settings.translationLanguage === "system" ? navigator.language : settings.translationLanguage;
-    const englishTracks = captionTracks.filter(
-      (track) => track.languageCode === "en"
-    );
-    translateSource = englishTracks.length > 0 ? englishTracks[0] : captionTracks[0];
-    const translatedTrack = document.createElement("track");
-    translatedTrack.label = `${AUTO_TRANSLATED_PREFIX} (${languageName(translateLanguage)})`;
-    translatedTrack.kind = "subtitles";
-    translatedTrack.srclang = translateLanguage;
-    if (isSameLanguage(translateSource.languageCode, translateLanguage))
-      translatedTrack.src = captionTrackURL(translateSource.baseUrl);
-    else
-      translatedTrack.src = captionTrackURL(
-        translateSource.baseUrl,
-        translateLanguage
-      );
-    translatedTrack.setAttribute("data-spelare-caption", "");
-    video.appendChild(translatedTrack);
-    watchCaptionChoice(video);
-    applyCaptionChoice(video);
-  }
-  function captionTrackURL(baseURL, translateTo) {
-    const url = new URL(baseURL);
-    url.searchParams.set("fmt", "vtt");
-    if (translateTo) url.searchParams.set("tlang", translateTo);
-    return url.href;
-  }
-  async function fetchAndroidPlayerInfo(videoId) {
-    try {
-      const response = await fetch(
-        `https://www.youtube.com${PLAYER_ENDPOINT}?prettyPrint=false`,
-        {
-          method: "POST",
-          body: JSON.stringify(androidPlayerRequest(videoId))
-        }
-      );
-      if (!response.ok)
-        throw new Error(
-          `Android caption request returned HTTP ${response.status}.`
-        );
-      const data = await response.json();
-      return {
-        tracks: captionTracksFrom(data),
-        details: videoDetailsFrom(data, videoId)
-      };
+      const stored = await browser.storage.local.get(STORAGE_KEY);
+      positions = validPositions(stored[STORAGE_KEY]);
     } catch (error) {
-      log("obtainAndroidCaptionTracks:", error.message);
-      return { tracks: [], details: null };
+      log("loadResumePositions:", error?.message || String(error));
     }
   }
-  function captionTracksFrom(data) {
-    const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    return Array.isArray(tracks) ? tracks.slice(0, 64).flatMap((track) => {
-      const name = track?.name?.runs?.[0]?.text ?? track?.name?.simpleText;
-      return typeof track?.baseUrl !== "string" || track.baseUrl.length > 8192 || !isYouTubeURL(track.baseUrl) || typeof track?.languageCode !== "string" || track.languageCode.length > 32 || typeof name !== "string" ? [] : [
-        {
-          baseUrl: track.baseUrl,
-          languageCode: track.languageCode,
-          name: {
-            runs: [
-              {
-                text: name.slice(0, 200)
-              }
-            ]
-          }
-        }
-      ];
-    }) : [];
+  function resumePositionFor(videoId) {
+    return settings.resumePlayback ? positions[videoId] ?? null : null;
   }
-  function videoDetailsFrom(data, videoId) {
-    const details = data?.videoDetails;
-    if (details?.videoId !== videoId || typeof details.title !== "string")
-      return null;
-    const loudnessDb = data?.playerConfig?.audioConfig?.loudnessDb;
-    return {
-      title: details.title.slice(0, 500),
-      author: typeof details.author === "string" ? details.author.slice(0, 200) : "",
-      channelId: /^UC[\w-]{22}$/.test(details.channelId) ? details.channelId : null,
-      loudnessDb: Number.isFinite(loudnessDb) && Math.abs(loudnessDb) <= 60 ? loudnessDb : null
-    };
-  }
-  function androidPlayerRequest(videoId) {
-    return playerRequestBody(videoId, { client: CLIENTS.ANDROID });
-  }
-
-  // src/content/frame-rate.js
-  var DEFAULT_FRAME_SECONDS = 1 / 30;
-  var MIN_FRAME_SECONDS = 1 / 240;
-  var MAX_FRAME_SECONDS = 1 / 10;
-  var frameSeconds = /* @__PURE__ */ new WeakMap();
-  function frameDuration(video) {
-    return frameSeconds.get(video) ?? DEFAULT_FRAME_SECONDS;
-  }
-  function measuredFrameDuration(previous, current2) {
-    if (!previous || current2.presentedFrames - previous.presentedFrames !== 1)
-      return null;
-    const delta = current2.mediaTime - previous.mediaTime;
-    return delta >= MIN_FRAME_SECONDS && delta <= MAX_FRAME_SECONDS ? delta : null;
-  }
-  function trackFrameDuration(video) {
-    if (typeof video.requestVideoFrameCallback !== "function") {
-      log("trackFrameDuration: requestVideoFrameCallback unavailable");
-      return;
+  async function storePosition(videoId, position) {
+    try {
+      const stored = await browser.storage.local.get(STORAGE_KEY);
+      positions = validPositions(stored[STORAGE_KEY]);
+      rememberPosition(positions, videoId, position);
+      await browser.storage.local.set({ [STORAGE_KEY]: positions });
+    } catch (error) {
+      log("storePosition:", error?.message || String(error));
     }
-    let previous = null;
-    const onFrame = (_now, metadata) => {
-      if (!video.isConnected) return;
-      const measured = measuredFrameDuration(previous, metadata);
-      if (measured !== null) frameSeconds.set(video, measured);
-      previous = {
-        presentedFrames: metadata.presentedFrames,
-        mediaTime: metadata.mediaTime
-      };
-      video.requestVideoFrameCallback(onFrame);
+  }
+  function trackPosition(video, videoId) {
+    let lastSaved = 0;
+    const save2 = () => {
+      if (!settings.resumePlayback || !video.isConnected) return;
+      const position = video.currentTime;
+      const keep = isResumable(position, video.duration);
+      if (!keep && !(videoId in positions)) return;
+      lastSaved = performance.now();
+      storePosition(videoId, keep ? position : null);
     };
-    video.requestVideoFrameCallback(onFrame);
+    video.addEventListener("timeupdate", () => {
+      if (!video.paused && performance.now() - lastSaved >= SAVE_EVERY_MS) save2();
+    });
+    video.addEventListener("pause", save2);
+    video.addEventListener("ended", () => storePosition(videoId, null));
+    window.addEventListener("pagehide", save2);
+  }
+  function formatTime(seconds2) {
+    const s = Math.floor(seconds2 % 60);
+    const m = Math.floor(seconds2 / 60) % 60;
+    const h = Math.floor(seconds2 / 3600);
+    const pad = (n) => String(n).padStart(2, "0");
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  }
+  function showResumeNotice(video, position) {
+    document.querySelector("#spelare-resume")?.remove();
+    const notice = document.createElement("div");
+    notice.id = "spelare-resume";
+    notice.setAttribute("role", "status");
+    const text = document.createElement("span");
+    text.textContent = `Resumed at ${formatTime(position)}`;
+    const startOver = document.createElement("button");
+    startOver.type = "button";
+    startOver.textContent = "Start over";
+    startOver.addEventListener("mousedown", (event) => event.preventDefault());
+    startOver.addEventListener("click", (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      video.currentTime = 0;
+      notice.remove();
+    });
+    notice.append(text, startOver);
+    video.closest("div").insertBefore(notice, video);
+    setTimeout(() => notice.classList.add("leaving"), NOTICE_MS);
+    setTimeout(() => notice.remove(), NOTICE_MS + 400);
   }
 
   // src/shared/page-messages.js
@@ -438,16 +297,16 @@
     if (!seekable?.length) return null;
     return { start: seekable.start(0), end: seekable.end(seekable.length - 1) };
   }
-  function seekBackward(video, seconds) {
-    log("seekBackward:", seconds);
+  function seekBackward(video, seconds2) {
+    log("seekBackward:", seconds2);
     const start = seekableRange(video)?.start ?? 0;
-    video.currentTime = Math.max(video.currentTime - seconds, start);
+    video.currentTime = Math.max(video.currentTime - seconds2, start);
   }
-  function seekForward(video, seconds) {
-    log("seekForward:", seconds);
+  function seekForward(video, seconds2) {
+    log("seekForward:", seconds2);
     const range = seekableRange(video);
     if (range)
-      video.currentTime = Math.min(video.currentTime + seconds, range.end);
+      video.currentTime = Math.min(video.currentTime + seconds2, range.end);
   }
   function toggleTheaterMode() {
     log("toggleTheater");
@@ -789,10 +648,29 @@
         separator.setAttribute("role", "separator");
         menu.appendChild(separator);
       }
-      const button = makeToolbarButton(item.label, () => {
+      if (item.heading) {
+        const heading = document.createElement("div");
+        heading.classList.add("menu-heading");
+        heading.setAttribute("role", "presentation");
+        heading.textContent = item.heading;
+        menu.appendChild(heading);
+        continue;
+      }
+      const button = makeToolbarButton("", () => {
         closeMenu(toolbar);
         onPick(item.id);
       });
+      if (item.prefix) {
+        const prefix = document.createElement("span");
+        prefix.classList.add("menu-prefix");
+        prefix.textContent = item.prefix;
+        button.appendChild(prefix);
+      }
+      const label = document.createElement("span");
+      label.classList.add("menu-label");
+      label.textContent = item.label;
+      button.appendChild(label);
+      button.title = item.prefix ? `${item.prefix}  ${item.label}` : item.label;
       button.setAttribute("role", "menuitemradio");
       button.classList.toggle("active", item.active);
       button.setAttribute("aria-checked", String(item.active));
@@ -851,26 +729,38 @@
     if (toolbar.querySelector(".picker")?.anchor === anchor) closeMenu(toolbar);
     else open();
   }
-  function showQualityPicker(video, toolbar, anchor) {
-    const current2 = videoState.activeQuality || settings.quality;
-    const items = MENU_QUALITIES.filter(
-      (quality) => videoState.streams[quality]
-    ).map((quality) => ({
-      id: quality,
-      label: qualityLabel(quality),
-      active: quality === current2,
-      separatorBefore: quality === "audio"
-    }));
-    openMenu(
-      toolbar,
-      anchor,
-      "Quality",
-      items,
-      (quality) => setQuality(video, quality, { save: true })
-    );
+  function settingsMenuItems(streams, currentQuality, tracks, language) {
+    const items = [{ heading: "Quality" }];
+    for (const quality of MENU_QUALITIES)
+      if (streams[quality])
+        items.push({
+          id: `quality:${quality}`,
+          label: qualityLabel(quality),
+          active: quality === currentQuality,
+          separatorBefore: quality === "audio"
+        });
+    if (tracks.dubs.length > 0) {
+      items.push({ heading: "Audio", separatorBefore: true });
+      for (const item of audioMenuItems(tracks, language))
+        items.push({ ...item, id: `audio:${item.id ?? ""}` });
+    }
+    return items;
   }
-  function audioLanguageLabel(language) {
-    return language === null ? "Original" : languageLabel(language);
+  function showSettingsMenu(video, toolbar, anchor) {
+    const items = settingsMenuItems(
+      videoState.streams,
+      videoState.activeQuality || settings.quality,
+      availableAudioTracks(),
+      videoState.audioLanguage
+    );
+    openMenu(toolbar, anchor, "Settings", items, (id) => {
+      const [kind, value] = [
+        id.slice(0, id.indexOf(":")),
+        id.slice(id.indexOf(":") + 1)
+      ];
+      if (kind === "quality") setQuality(video, value, { save: true });
+      else setAudioLanguage(video, value || null);
+    });
   }
   function languageLabel(code) {
     const name = languageName(code);
@@ -901,11 +791,6 @@
     if (!quality) return;
     videoState.activeQuality = quality;
     switchVideoSource(video, videoState.streams[quality]);
-    const toolbar = document.querySelector("#spelare-toolbar");
-    const qualityButton = toolbar?.querySelector(".controls .quality");
-    if (qualityButton) qualityButton.textContent = qualityLabel(quality);
-    const audioButton = toolbar?.querySelector(".controls .audio-language");
-    if (audioButton) audioButton.textContent = audioLanguageLabel(language);
     reportPlayerState("spelare");
   }
   function playableQuality(wanted) {
@@ -947,8 +832,6 @@
       videoState.activeQuality = quality;
       switchVideoSource(video, streamURL);
     }
-    const button = document.querySelector("#spelare-toolbar .controls .quality");
-    if (button) button.textContent = qualityLabel(quality);
     reportPlayerState("spelare");
     return true;
   }
@@ -1011,58 +894,33 @@
     const controls = document.createElement("div");
     controls.classList.add("controls");
     toolbar.appendChild(controls);
-    const qualityButton = makeToolbarButton(
-      qualityLabel(videoState.activeQuality || settings.quality),
+    const settingsButton = makeToolbarButton(
+      "",
       () => toggleMenu(
         toolbar,
-        qualityButton,
-        () => showQualityPicker(video, toolbar, qualityButton)
+        settingsButton,
+        () => showSettingsMenu(video, toolbar, settingsButton)
       ),
-      "quality"
+      "settings"
     );
-    qualityButton.title = "Quality (Q / Shift-Q)";
-    qualityButton.setAttribute("aria-haspopup", "menu");
-    qualityButton.setAttribute("aria-expanded", "false");
-    controls.appendChild(qualityButton);
+    settingsButton.classList.add("icon-only");
+    settingsButton.title = "Quality and audio (Q / Shift-Q change quality)";
+    settingsButton.setAttribute("aria-label", "Settings");
+    settingsButton.setAttribute("aria-haspopup", "menu");
+    settingsButton.setAttribute("aria-expanded", "false");
+    controls.appendChild(settingsButton);
     const theaterButton = makeToolbarButton(
-      "Theater",
+      "",
       () => toggleTheaterMode(),
       "theater"
     );
+    theaterButton.classList.add("icon-only");
     theaterButton.title = "Theater mode (T)";
+    theaterButton.setAttribute("aria-label", "Theater mode");
     controls.appendChild(theaterButton);
     trackTheaterMode(theaterButton);
     toolbar.updateVisibility = autoHide(toolbar, video);
     video.closest("div").insertBefore(toolbar, video);
-    addAudioButton();
-  }
-  function addAudioButton() {
-    const toolbar = document.querySelector("#spelare-toolbar");
-    const video = document.querySelector(
-      "video[data-spelare-video]:not([data-spelare-fallback])"
-    );
-    if (!toolbar || !video || toolbar.querySelector(".audio-language")) return;
-    const tracks = availableAudioTracks();
-    if (tracks.dubs.length === 0) return;
-    const audioButton = makeToolbarButton(
-      audioLanguageLabel(videoState.audioLanguage),
-      () => toggleMenu(
-        toolbar,
-        audioButton,
-        () => openMenu(
-          toolbar,
-          audioButton,
-          "Audio",
-          audioMenuItems(tracks, videoState.audioLanguage),
-          (language) => setAudioLanguage(video, language)
-        )
-      ),
-      "audio-language"
-    );
-    audioButton.title = "Audio language";
-    audioButton.setAttribute("aria-haspopup", "menu");
-    audioButton.setAttribute("aria-expanded", "false");
-    toolbar.querySelector(".controls .quality").after(audioButton);
   }
   function applyToolbarVisibility() {
     log("showHideToolbar");
@@ -1070,6 +928,348 @@
       "data-spelare-no-toolbar",
       !settings.showToolbar
     );
+  }
+
+  // src/content/chapters.js
+  var MIN_CHAPTERS = 3;
+  var MIN_LENGTH_S = 10;
+  var MAX_CHAPTERS = 200;
+  var MAX_TITLE = 100;
+  var TIMESTAMP = String.raw`(?:(\d{1,2}):)?(\d{1,2}):(\d{2})`;
+  var LEADING = new RegExp(
+    String.raw`^\s*[\[(]?${TIMESTAMP}[\])]?\s*(?:[-–—:|•·]\s*)?(.*\S)\s*$`
+  );
+  var TRAILING = new RegExp(
+    String.raw`^\s*(.*?\S)\s*(?:[-–—:|•·]\s*)?[\[(]?${TIMESTAMP}[\])]?\s*$`
+  );
+  function seconds(hours, minutes, secs) {
+    if (Number(secs) > 59 || hours !== void 0 && Number(minutes) > 59)
+      return null;
+    return Number(hours ?? 0) * 3600 + Number(minutes) * 60 + Number(secs);
+  }
+  function chapterOn(line) {
+    const leading = line.match(LEADING);
+    if (leading) {
+      const start = seconds(leading[1], leading[2], leading[3]);
+      return start === null ? null : { start, title: leading[4] };
+    }
+    const trailing = line.match(TRAILING);
+    if (trailing) {
+      const start = seconds(trailing[2], trailing[3], trailing[4]);
+      return start === null ? null : { start, title: trailing[1] };
+    }
+    return null;
+  }
+  function parseChapters(description, duration = Infinity) {
+    if (typeof description !== "string") return [];
+    const chapters = [];
+    for (const line of description.split("\n")) {
+      const chapter = chapterOn(line);
+      if (!chapter) continue;
+      chapters.push({ ...chapter, title: chapter.title.slice(0, MAX_TITLE) });
+      if (chapters.length > MAX_CHAPTERS) return [];
+    }
+    const valid = chapters.length >= MIN_CHAPTERS && chapters[0].start === 0 && chapters.every(
+      (chapter, index) => index === 0 || chapter.start - chapters[index - 1].start >= MIN_LENGTH_S
+    ) && chapters.at(-1).start < duration;
+    return valid ? chapters : [];
+  }
+  function chapterAt(chapters, time) {
+    let index = 0;
+    while (index + 1 < chapters.length && chapters[index + 1].start <= time)
+      index += 1;
+    return index;
+  }
+  function addChaptersButton() {
+    const toolbar = document.querySelector("#spelare-toolbar");
+    const video = document.querySelector(
+      "video[data-spelare-video]:not([data-spelare-fallback])"
+    );
+    const chapters = videoState.chapters;
+    if (!toolbar || !video || toolbar.querySelector(".chapters")) return;
+    if (!chapters || chapters.length === 0) return;
+    log("chapters:", chapters.length);
+    let shown = -1;
+    const button = makeToolbarButton(
+      "",
+      () => toggleMenu(
+        toolbar,
+        button,
+        () => openMenu(
+          toolbar,
+          button,
+          "Chapters",
+          chapters.map((chapter, index) => ({
+            id: index,
+            prefix: formatTime(chapter.start),
+            label: chapter.title,
+            active: index === shown,
+            separatorBefore: false
+          })),
+          (index) => {
+            video.currentTime = chapters[index].start;
+            update2();
+          }
+        )
+      ),
+      "chapters"
+    );
+    button.setAttribute("aria-haspopup", "menu");
+    button.setAttribute("aria-expanded", "false");
+    const update2 = () => {
+      const index = chapterAt(chapters, video.currentTime);
+      if (index === shown) return;
+      shown = index;
+      button.textContent = chapters[index].title;
+      button.title = `Chapter ${index + 1} of ${chapters.length}: ${chapters[index].title}`;
+    };
+    update2();
+    video.addEventListener("timeupdate", update2);
+    video.addEventListener("seeked", update2);
+    toolbar.querySelector(".controls").prepend(button);
+  }
+
+  // src/shared/hosts.js
+  function isAllowedHost(url, domain) {
+    if (typeof url !== "string") return false;
+    try {
+      const { protocol, hostname } = new URL(url);
+      return protocol === "https:" && (hostname === domain || hostname.endsWith(`.${domain}`));
+    } catch {
+      return false;
+    }
+  }
+  var isGooglevideoURL = (url) => isAllowedHost(url, "googlevideo.com");
+  var isYouTubeURL = (url) => isAllowedHost(url, "youtube.com");
+
+  // src/shared/innertube.js
+  var CLIENTS = {
+    ANDROID: {
+      clientName: "ANDROID",
+      clientVersion: "20.10.38",
+      androidSdkVersion: 30,
+      userAgent: "com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip",
+      osName: "Android",
+      osVersion: "11",
+      hl: "en",
+      timeZone: "UTC",
+      utcOffsetMinutes: 0
+    },
+    VISIONOS: {
+      clientName: "VISIONOS",
+      clientVersion: "1.02",
+      deviceMake: "Apple",
+      deviceModel: "RealityDevice17,1",
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
+      osName: "visionOS",
+      osVersion: "26.5.23O471"
+    }
+  };
+  var PLAYER_ENDPOINT = "/youtubei/v1/player";
+  function playerRequestBody(videoId, context, contentPlaybackContext = { html5Preference: "HTML5_PREF_WANTS" }) {
+    return {
+      context,
+      videoId,
+      playbackContext: { contentPlaybackContext },
+      contentCheckOk: true,
+      racyCheckOk: true
+    };
+  }
+
+  // src/content/captions.js
+  var AUTO_TRANSLATED_PREFIX = "Auto-translated";
+  function toggleSubtitles(video, enableOnly = false) {
+    log("toggleSubtitles:", enableOnly);
+    const tracks = Array.from(video.textTracks);
+    const showing = tracks.find((track) => track.mode === "showing");
+    const autoTranslated = tracks.find(
+      (track) => track.label.startsWith(AUTO_TRANSLATED_PREFIX)
+    );
+    if (showing) {
+      if (!enableOnly) showing.mode = "disabled";
+    } else if (autoTranslated) autoTranslated.mode = "showing";
+    videoState.captionChoice = showingCaptionLabel(video);
+  }
+  function showingCaptionLabel(video) {
+    return Array.from(video.textTracks).find(
+      (track) => track.kind === "subtitles" && track.mode === "showing"
+    )?.label ?? null;
+  }
+  function captionTrackToShow(choice, labels, captionsOnByDefault) {
+    const autoTranslated = labels.find(
+      (label) => label.startsWith(AUTO_TRANSLATED_PREFIX)
+    );
+    if (choice === void 0)
+      return captionsOnByDefault ? autoTranslated ?? null : null;
+    if (choice === null) return null;
+    return labels.includes(choice) ? choice : autoTranslated ?? null;
+  }
+  var watchedVideos = /* @__PURE__ */ new WeakSet();
+  function watchCaptionChoice(video) {
+    if (watchedVideos.has(video)) return;
+    watchedVideos.add(video);
+    video.textTracks.addEventListener("change", () => {
+      if (!video.querySelector("track[data-spelare-caption]")) return;
+      videoState.captionChoice = showingCaptionLabel(video);
+    });
+  }
+  function applyCaptionChoice(video) {
+    const tracks = Array.from(video.textTracks).filter(
+      (track) => track.kind === "subtitles"
+    );
+    const label = captionTrackToShow(
+      videoState.captionChoice,
+      tracks.map((track) => track.label),
+      settings.captionsOnByDefault
+    );
+    for (const track of tracks)
+      track.mode = track.label === label ? "showing" : "disabled";
+    videoState.captionChoice = label;
+  }
+  function removeCaptionTracks(video) {
+    video.querySelectorAll("track[data-spelare-caption]").forEach((track) => track.remove());
+  }
+  function setupCaptions(video) {
+    log("setupCaptions");
+    let translateSource;
+    const captionTracks = videoState.response?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    if (!captionTracks?.length) return;
+    if (video.readyState < HTMLMediaElement.HAVE_METADATA) {
+      video.addEventListener("loadedmetadata", () => setupCaptions(video), {
+        once: true
+      });
+      return;
+    }
+    removeCaptionTracks(video);
+    captionTracks.forEach((captionTrack) => {
+      const trackElement = document.createElement("track");
+      trackElement.label = captionTrack.name.runs[0].text;
+      trackElement.kind = "subtitles";
+      trackElement.srclang = captionTrack.languageCode;
+      trackElement.src = captionTrackURL(captionTrack.baseUrl);
+      trackElement.setAttribute("data-spelare-caption", "");
+      video.appendChild(trackElement);
+    });
+    const translateLanguage = settings.translationLanguage === "system" ? navigator.language : settings.translationLanguage;
+    const englishTracks = captionTracks.filter(
+      (track) => track.languageCode === "en"
+    );
+    translateSource = englishTracks.length > 0 ? englishTracks[0] : captionTracks[0];
+    const translatedTrack = document.createElement("track");
+    translatedTrack.label = `${AUTO_TRANSLATED_PREFIX} (${languageName(translateLanguage)})`;
+    translatedTrack.kind = "subtitles";
+    translatedTrack.srclang = translateLanguage;
+    if (isSameLanguage(translateSource.languageCode, translateLanguage))
+      translatedTrack.src = captionTrackURL(translateSource.baseUrl);
+    else
+      translatedTrack.src = captionTrackURL(
+        translateSource.baseUrl,
+        translateLanguage
+      );
+    translatedTrack.setAttribute("data-spelare-caption", "");
+    video.appendChild(translatedTrack);
+    watchCaptionChoice(video);
+    applyCaptionChoice(video);
+  }
+  function captionTrackURL(baseURL, translateTo) {
+    const url = new URL(baseURL);
+    url.searchParams.set("fmt", "vtt");
+    if (translateTo) url.searchParams.set("tlang", translateTo);
+    return url.href;
+  }
+  async function fetchAndroidPlayerInfo(videoId) {
+    try {
+      const response = await fetch(
+        `https://www.youtube.com${PLAYER_ENDPOINT}?prettyPrint=false`,
+        {
+          method: "POST",
+          body: JSON.stringify(androidPlayerRequest(videoId))
+        }
+      );
+      if (!response.ok)
+        throw new Error(
+          `Android caption request returned HTTP ${response.status}.`
+        );
+      const data = await response.json();
+      return {
+        tracks: captionTracksFrom(data),
+        details: videoDetailsFrom(data, videoId)
+      };
+    } catch (error) {
+      log("obtainAndroidCaptionTracks:", error.message);
+      return { tracks: [], details: null };
+    }
+  }
+  function captionTracksFrom(data) {
+    const tracks = data?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    return Array.isArray(tracks) ? tracks.slice(0, 64).flatMap((track) => {
+      const name = track?.name?.runs?.[0]?.text ?? track?.name?.simpleText;
+      return typeof track?.baseUrl !== "string" || track.baseUrl.length > 8192 || !isYouTubeURL(track.baseUrl) || typeof track?.languageCode !== "string" || track.languageCode.length > 32 || typeof name !== "string" ? [] : [
+        {
+          baseUrl: track.baseUrl,
+          languageCode: track.languageCode,
+          name: {
+            runs: [
+              {
+                text: name.slice(0, 200)
+              }
+            ]
+          }
+        }
+      ];
+    }) : [];
+  }
+  function videoDetailsFrom(data, videoId) {
+    const details = data?.videoDetails;
+    if (details?.videoId !== videoId || typeof details.title !== "string")
+      return null;
+    const loudnessDb = data?.playerConfig?.audioConfig?.loudnessDb;
+    return {
+      title: details.title.slice(0, 500),
+      author: typeof details.author === "string" ? details.author.slice(0, 200) : "",
+      channelId: /^UC[\w-]{22}$/.test(details.channelId) ? details.channelId : null,
+      loudnessDb: Number.isFinite(loudnessDb) && Math.abs(loudnessDb) <= 60 ? loudnessDb : null,
+      chapters: parseChapters(
+        details.shortDescription,
+        Number(details.lengthSeconds) || Infinity
+      )
+    };
+  }
+  function androidPlayerRequest(videoId) {
+    return playerRequestBody(videoId, { client: CLIENTS.ANDROID });
+  }
+
+  // src/content/frame-rate.js
+  var DEFAULT_FRAME_SECONDS = 1 / 30;
+  var MIN_FRAME_SECONDS = 1 / 240;
+  var MAX_FRAME_SECONDS = 1 / 10;
+  var frameSeconds = /* @__PURE__ */ new WeakMap();
+  function frameDuration(video) {
+    return frameSeconds.get(video) ?? DEFAULT_FRAME_SECONDS;
+  }
+  function measuredFrameDuration(previous, current2) {
+    if (!previous || current2.presentedFrames - previous.presentedFrames !== 1)
+      return null;
+    const delta = current2.mediaTime - previous.mediaTime;
+    return delta >= MIN_FRAME_SECONDS && delta <= MAX_FRAME_SECONDS ? delta : null;
+  }
+  function trackFrameDuration(video) {
+    if (typeof video.requestVideoFrameCallback !== "function") {
+      log("trackFrameDuration: requestVideoFrameCallback unavailable");
+      return;
+    }
+    let previous = null;
+    const onFrame = (_now, metadata) => {
+      if (!video.isConnected) return;
+      const measured = measuredFrameDuration(previous, metadata);
+      if (measured !== null) frameSeconds.set(video, measured);
+      previous = {
+        presentedFrames: metadata.presentedFrames,
+        mediaTime: metadata.mediaTime
+      };
+      video.requestVideoFrameCallback(onFrame);
+    };
+    video.requestVideoFrameCallback(onFrame);
   }
 
   // src/content/hotkeys.js
@@ -1203,8 +1403,8 @@
     if (/^\d+$/.test(value)) return parseInt(value);
     const hms = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
     if (!hms || value === "") return -1;
-    const [hours, minutes, seconds] = hms.slice(1).map((part) => Number(part ?? 0));
-    return hours * 3600 + minutes * 60 + seconds;
+    const [hours, minutes, seconds2] = hms.slice(1).map((part) => Number(part ?? 0));
+    return hours * 3600 + minutes * 60 + seconds2;
   }
   function videoIdFromURL(url) {
     if (url.pathname !== "/watch") return void 0;
@@ -1643,102 +1843,6 @@
     }, 100);
   }
 
-  // src/content/resume.js
-  var STORAGE_KEY = "resumePositions";
-  var MAX_VIDEOS = 500;
-  var MIN_DURATION_S = 120;
-  var MIN_POSITION_S = 30;
-  var END_MARGIN_S = 30;
-  var SAVE_EVERY_MS = 1e4;
-  var NOTICE_MS = 8e3;
-  var positions = {};
-  function isResumable(position, duration) {
-    return Number.isFinite(duration) && duration >= MIN_DURATION_S && position >= MIN_POSITION_S && position < duration - END_MARGIN_S && position < duration * 0.95;
-  }
-  function rememberPosition(map, videoId, position) {
-    delete map[videoId];
-    if (position !== null) map[videoId] = Math.floor(position);
-    const ids = Object.keys(map);
-    const excess = Math.max(ids.length - MAX_VIDEOS, 0);
-    for (const old of ids.slice(0, excess)) delete map[old];
-  }
-  function validPositions(stored) {
-    const valid = {};
-    if (stored && typeof stored === "object") {
-      for (const [videoId, position] of Object.entries(stored).slice(-MAX_VIDEOS))
-        if (/^[\w-]{1,64}$/.test(videoId) && Number.isFinite(position) && position > 0)
-          valid[videoId] = position;
-    }
-    return valid;
-  }
-  async function loadResumePositions() {
-    try {
-      const stored = await browser.storage.local.get(STORAGE_KEY);
-      positions = validPositions(stored[STORAGE_KEY]);
-    } catch (error) {
-      log("loadResumePositions:", error?.message || String(error));
-    }
-  }
-  function resumePositionFor(videoId) {
-    return settings.resumePlayback ? positions[videoId] ?? null : null;
-  }
-  async function storePosition(videoId, position) {
-    try {
-      const stored = await browser.storage.local.get(STORAGE_KEY);
-      positions = validPositions(stored[STORAGE_KEY]);
-      rememberPosition(positions, videoId, position);
-      await browser.storage.local.set({ [STORAGE_KEY]: positions });
-    } catch (error) {
-      log("storePosition:", error?.message || String(error));
-    }
-  }
-  function trackPosition(video, videoId) {
-    let lastSaved = 0;
-    const save2 = () => {
-      if (!settings.resumePlayback || !video.isConnected) return;
-      const position = video.currentTime;
-      const keep = isResumable(position, video.duration);
-      if (!keep && !(videoId in positions)) return;
-      lastSaved = performance.now();
-      storePosition(videoId, keep ? position : null);
-    };
-    video.addEventListener("timeupdate", () => {
-      if (!video.paused && performance.now() - lastSaved >= SAVE_EVERY_MS) save2();
-    });
-    video.addEventListener("pause", save2);
-    video.addEventListener("ended", () => storePosition(videoId, null));
-    window.addEventListener("pagehide", save2);
-  }
-  function formatTime(seconds) {
-    const s = Math.floor(seconds % 60);
-    const m = Math.floor(seconds / 60) % 60;
-    const h = Math.floor(seconds / 3600);
-    const pad = (n) => String(n).padStart(2, "0");
-    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
-  }
-  function showResumeNotice(video, position) {
-    document.querySelector("#spelare-resume")?.remove();
-    const notice = document.createElement("div");
-    notice.id = "spelare-resume";
-    notice.setAttribute("role", "status");
-    const text = document.createElement("span");
-    text.textContent = `Resumed at ${formatTime(position)}`;
-    const startOver = document.createElement("button");
-    startOver.type = "button";
-    startOver.textContent = "Start over";
-    startOver.addEventListener("mousedown", (event) => event.preventDefault());
-    startOver.addEventListener("click", (event) => {
-      event.stopPropagation();
-      event.preventDefault();
-      video.currentTime = 0;
-      notice.remove();
-    });
-    notice.append(text, startOver);
-    video.closest("div").insertBefore(notice, video);
-    setTimeout(() => notice.classList.add("leaving"), NOTICE_MS);
-    setTimeout(() => notice.remove(), NOTICE_MS + 400);
-  }
-
   // src/shared/poll.js
   async function pollFor(probe, { attempts, intervalMs, isCurrent = () => true }) {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -1762,7 +1866,7 @@
       startTimeFromNavigation()
     );
     if (releaseVideo) video.remove();
-    showFallbackNotice("Fallback", notice);
+    showFallbackNotice(notice);
     reportPlayerState("fallback");
     callPlayer("fallBack", {
       videoId: currentVideoId(),
@@ -1773,19 +1877,23 @@
   function fallbackStartTime(position, navigationStartTime) {
     return Number.isFinite(position) && position > 0 ? position : navigationStartTime;
   }
-  function showFallbackNotice(label, message) {
-    const qualityButton = document.querySelector(
-      "#spelare-toolbar .controls .quality"
+  function showFallbackNotice(message) {
+    const settingsButton = document.querySelector(
+      "#spelare-toolbar .controls .settings"
     );
-    if (!qualityButton) return;
-    const replacement = qualityButton.cloneNode(true);
-    qualityButton.replaceWith(replacement);
-    replacement.textContent = `${qualityLabel(settings.quality)} (${label})`;
-    replacement.addEventListener("click", (event) => {
+    if (!settingsButton) return;
+    const notice = document.createElement("button");
+    notice.type = "button";
+    notice.className = "button fallback";
+    notice.textContent = "YouTube player";
+    notice.title = "Why YouTube's own player is playing";
+    notice.addEventListener("mousedown", (event) => event.preventDefault());
+    notice.addEventListener("click", (event) => {
       event.stopPropagation();
       event.preventDefault();
       alert(message);
     });
+    settingsButton.replaceWith(notice);
   }
   async function handleExtensionError(message, videoId, { notice } = {}) {
     const isCurrent = () => videoId === videoState.videoId && !videoState.response?.fallback;
@@ -2109,8 +2217,6 @@
         log("handleUnplayableStream: falling back from audio");
         videoState.activeQuality = "auto";
         switchVideoSource(video, videoState.streams.auto, { pauseFirst: false });
-        const qualityButton = document.querySelector("#spelare-toolbar .quality");
-        if (qualityButton) qualityButton.textContent = "Auto";
         reportPlayerState("spelare");
       } else fallbackToYouTube(video);
     });
@@ -2158,7 +2264,6 @@
         entry.master = manifest;
         if (candidate.videoId === videoState.videoId) {
           videoState.dubMaster = manifest;
-          addAudioButton();
         }
         const renditionURI = pickAudioRendition(manifest.split("\n"));
         if (!renditionURI)
@@ -2259,6 +2364,8 @@
         return;
       if (details) {
         videoState.details = details;
+        videoState.chapters = details.chapters;
+        addChaptersButton();
         applyVideoDetails(details);
         if (ownsMediaSession()) updateNowPlaying();
       }
@@ -2354,6 +2461,7 @@
       videoState.activeQuality = null;
       videoState.response = null;
       videoState.details = null;
+      videoState.chapters = null;
       videoState.captionChoice = void 0;
       videoState.audioLanguage = null;
       videoState.originalAudioURL = null;

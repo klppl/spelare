@@ -41,6 +41,8 @@ export const videoState = {
   videoId: null,
   // Title and channel for Now Playing, once the player response has them.
   details: null,
+  // The video's chapters from its description ([{ start, title }]).
+  chapters: null,
   // The dub picked from the Audio menu (a language code), or null for the
   // original audio; and the original audio-only stream (stream-urls.js).
   audioLanguage: null,

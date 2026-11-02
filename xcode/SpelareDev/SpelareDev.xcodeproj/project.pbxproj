@@ -446,6 +446,7 @@
 		FA7B44143097CE270046CF3D /* Debug configuration for PBXNativeTarget "SpelareDev Extension" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "SpelareDev Extension/SpelareDev Extension.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;
@@ -480,6 +481,7 @@
 		FA7B44153097CE270046CF3D /* Release configuration for PBXNativeTarget "SpelareDev Extension" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "SpelareDev Extension/SpelareDev Extension.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = YES;

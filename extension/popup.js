@@ -1,9 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Picks up settings changed on other devices before showing them, but
+    // waits no more than a moment for iCloud.
+    let pulled = browser.runtime.sendMessage({ type: 'icloud-pull' }).catch(() => {});
+    let iCloudChecked = Promise.race([pulled, new Promise((resolve) => setTimeout(resolve, 1500))]);
+
+    // Whether to sync is kept per device, in local storage.
+    let icloudSync = document.querySelector('#icloudSync');
+    browser.storage.local.get('icloudSync').then((results) => {
+        icloudSync.checked = results.icloudSync !== false;
+    });
+    icloudSync.addEventListener('change', () => {
+        browser.storage.local.set({ icloudSync: icloudSync.checked });
+    });
+
     // Checkboxes for parts of YouTube to hide; each is off unless set.
     let hideSettings = ['hideShorts', 'hideRecommendations', 'hideComments', 'hideEndScreens'];
     let settings = ['autoplay', 'showDislikes', 'resumePlayback', 'evenLoudness', 'quality', 'showToolbar', 'showCaption', 'subtitles', ...hideSettings];
-    browser.storage.sync.get(settings).then((results) => {
+    iCloudChecked.then(() => browser.storage.sync.get(settings)).then((results) => {
         let autoplay = typeof(results.autoplay) === 'undefined' ? false : results.autoplay;
         // Values older versions offered: 4320p never worked (it played Auto),
         // and YouTube's code for Japanese is ja, not jp.

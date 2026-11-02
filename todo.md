@@ -26,12 +26,11 @@
   - Popup setting per category (sponsor, intro, self-promo…).
   - A short "Skipped sponsor · Undo" message.
   - Show segments as chapters too (see below).
-- [ ] **Chapters.** Read them from the player response or from description timestamps. Expose them as a
+- [x] **Chapters.** Read them from the player response or from description timestamps. Expose them as a
   `kind="chapters"` track and a chapter menu in the toolbar. SponsorBlock segments feed the same list.
 - [x] **Change quality in fullscreen and theater mode.**
   - [x] `q` / Shift-Q cycles through qualities.
   - [x] The popup changes the current tab's quality right away, without a reload.
-  - [ ] Show which quality was picked while in fullscreen (the toolbar isn't visible there).
 - [x] **Double-click for fullscreen.** Only when both clicks land on the video area (not the native
   controls) and close together in time, so fast clicks on the controls don't trigger it.
 
@@ -63,6 +62,6 @@ Each one a setting in the popup, similar to Unhook.
 
 ## Sync
 
-- [ ] **iCloud sync** of settings between Mac, iPhone and iPad once iOS is supported. Settings already
+- [x] **iCloud sync** of settings between Mac, iPhone and iPad once iOS is supported. Settings already
   live in `browser.storage.sync`; check that Safari syncs it across devices, and fill any gaps through
   the native app.

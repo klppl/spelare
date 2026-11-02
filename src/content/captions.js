@@ -1,4 +1,5 @@
 import { isSameLanguage, languageName } from "./languages.js";
+import { parseChapters } from "./chapters.js";
 import { log } from "./log.js";
 import { settings, videoState } from "./state.js";
 import { isYouTubeURL } from "../shared/hosts.js";
@@ -201,6 +202,10 @@ export function videoDetailsFrom(data, videoId) {
       Number.isFinite(loudnessDb) && Math.abs(loudnessDb) <= 60
         ? loudnessDb
         : null,
+    chapters: parseChapters(
+      details.shortDescription,
+      Number(details.lengthSeconds) || Infinity,
+    ),
   };
 }
 // Player request as the ANDROID app, whose responses include caption tracks.

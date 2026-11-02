@@ -36,9 +36,13 @@ export const MENU_QUALITIES = [
   "audio",
 ];
 // Opens a menu below `anchor`, like a macOS pop-up menu: `items` are
-// { id, label, active, separatorBefore }, and picking one calls onPick(id).
+// { id, label, active, separatorBefore, prefix? } or { heading } (a section
+// title, not pickable), and picking one calls
+// onPick(id). Each row is one line; a long label is cut short (the whole of
+// it shows on hover), and a prefix (a chapter's time) gets a column of its
+// own so labels line up.
 // Escape, a click anywhere else or the anchor again closes it unchanged.
-function openMenu(toolbar, anchor, name, items, onPick) {
+export function openMenu(toolbar, anchor, name, items, onPick) {
   closeMenu(toolbar);
   const menu = document.createElement("div");
   menu.classList.add("picker");
@@ -52,10 +56,29 @@ function openMenu(toolbar, anchor, name, items, onPick) {
       separator.setAttribute("role", "separator");
       menu.appendChild(separator);
     }
-    const button = makeToolbarButton(item.label, () => {
+    if (item.heading) {
+      const heading = document.createElement("div");
+      heading.classList.add("menu-heading");
+      heading.setAttribute("role", "presentation");
+      heading.textContent = item.heading;
+      menu.appendChild(heading);
+      continue;
+    }
+    const button = makeToolbarButton("", () => {
       closeMenu(toolbar);
       onPick(item.id);
     });
+    if (item.prefix) {
+      const prefix = document.createElement("span");
+      prefix.classList.add("menu-prefix");
+      prefix.textContent = item.prefix;
+      button.appendChild(prefix);
+    }
+    const label = document.createElement("span");
+    label.classList.add("menu-label");
+    label.textContent = item.label;
+    button.appendChild(label);
+    button.title = item.prefix ? `${item.prefix}  ${item.label}` : item.label;
     button.setAttribute("role", "menuitemradio");
     button.classList.toggle("active", item.active);
     button.setAttribute("aria-checked", String(item.active));
@@ -114,23 +137,44 @@ export function closeMenu(toolbar) {
   toolbar.updateVisibility?.();
 }
 // Opens `anchor`'s menu, or closes it if it's the one open.
-function toggleMenu(toolbar, anchor, open) {
+export function toggleMenu(toolbar, anchor, open) {
   if (toolbar.querySelector(".picker")?.anchor === anchor) closeMenu(toolbar);
   else open();
 }
-export function showQualityPicker(video, toolbar, anchor) {
-  const current = videoState.activeQuality || settings.quality;
-  const items = MENU_QUALITIES.filter(
-    (quality) => videoState.streams[quality],
-  ).map((quality) => ({
-    id: quality,
-    label: qualityLabel(quality),
-    active: quality === current,
-    separatorBefore: quality === "audio",
-  }));
-  openMenu(toolbar, anchor, "Quality", items, (quality) =>
-    setQuality(video, quality, { save: true }),
+// The Settings menu: Quality, then Audio for videos with dubs. Ids are
+// "quality:<id>" and "audio:<language>" ("audio:" for the original).
+export function settingsMenuItems(streams, currentQuality, tracks, language) {
+  const items = [{ heading: "Quality" }];
+  for (const quality of MENU_QUALITIES)
+    if (streams[quality])
+      items.push({
+        id: `quality:${quality}`,
+        label: qualityLabel(quality),
+        active: quality === currentQuality,
+        separatorBefore: quality === "audio",
+      });
+  if (tracks.dubs.length > 0) {
+    items.push({ heading: "Audio", separatorBefore: true });
+    for (const item of audioMenuItems(tracks, language))
+      items.push({ ...item, id: `audio:${item.id ?? ""}` });
+  }
+  return items;
+}
+export function showSettingsMenu(video, toolbar, anchor) {
+  const items = settingsMenuItems(
+    videoState.streams,
+    videoState.activeQuality || settings.quality,
+    availableAudioTracks(),
+    videoState.audioLanguage,
   );
+  openMenu(toolbar, anchor, "Settings", items, (id) => {
+    const [kind, value] = [
+      id.slice(0, id.indexOf(":")),
+      id.slice(id.indexOf(":") + 1),
+    ];
+    if (kind === "quality") setQuality(video, value, { save: true });
+    else setAudioLanguage(video, value || null);
+  });
 }
 // The Audio button's label: "Original", or the dub's language.
 export function audioLanguageLabel(language) {
@@ -174,11 +218,6 @@ export function setAudioLanguage(video, language) {
   if (!quality) return;
   videoState.activeQuality = quality;
   switchVideoSource(video, videoState.streams[quality]);
-  const toolbar = document.querySelector("#spelare-toolbar");
-  const qualityButton = toolbar?.querySelector(".controls .quality");
-  if (qualityButton) qualityButton.textContent = qualityLabel(quality);
-  const audioButton = toolbar?.querySelector(".controls .audio-language");
-  if (audioButton) audioButton.textContent = audioLanguageLabel(language);
   reportPlayerState("spelare");
 }
 // The quality this video can play for `wanted`: that one, else the best one
@@ -229,8 +268,6 @@ export function setQuality(video, quality, { save = false } = {}) {
     videoState.activeQuality = quality;
     switchVideoSource(video, streamURL);
   }
-  const button = document.querySelector("#spelare-toolbar .controls .quality");
-  if (button) button.textContent = qualityLabel(quality);
   reportPlayerState("spelare");
   return true;
 }
@@ -301,6 +338,10 @@ function autoHide(toolbar, video) {
   update();
   return update;
 }
+// Spelare's controls, one capsule like Safari's own: [Chapters] [Settings]
+// [Theater]. The chapter (added once known, chapters.js) is the only text;
+// Settings holds Quality and Audio; Theater is an icon that fills in while
+// theater mode is on.
 export function createToolbar(video) {
   log("createToolbar");
   const toolbar = document.createElement("div");
@@ -308,59 +349,32 @@ export function createToolbar(video) {
   const controls = document.createElement("div");
   controls.classList.add("controls");
   toolbar.appendChild(controls);
-  const qualityButton = makeToolbarButton(
-    qualityLabel(videoState.activeQuality || settings.quality),
+  const settingsButton = makeToolbarButton(
+    "",
     () =>
-      toggleMenu(toolbar, qualityButton, () =>
-        showQualityPicker(video, toolbar, qualityButton),
+      toggleMenu(toolbar, settingsButton, () =>
+        showSettingsMenu(video, toolbar, settingsButton),
       ),
-    "quality",
+    "settings",
   );
-  qualityButton.title = "Quality (Q / Shift-Q)";
-  qualityButton.setAttribute("aria-haspopup", "menu");
-  qualityButton.setAttribute("aria-expanded", "false");
-  controls.appendChild(qualityButton);
+  settingsButton.classList.add("icon-only");
+  settingsButton.title = "Quality and audio (Q / Shift-Q change quality)";
+  settingsButton.setAttribute("aria-label", "Settings");
+  settingsButton.setAttribute("aria-haspopup", "menu");
+  settingsButton.setAttribute("aria-expanded", "false");
+  controls.appendChild(settingsButton);
   const theaterButton = makeToolbarButton(
-    "Theater",
+    "",
     () => toggleTheaterMode(),
     "theater",
   );
+  theaterButton.classList.add("icon-only");
   theaterButton.title = "Theater mode (T)";
+  theaterButton.setAttribute("aria-label", "Theater mode");
   controls.appendChild(theaterButton);
   trackTheaterMode(theaterButton);
   toolbar.updateVisibility = autoHide(toolbar, video);
   video.closest("div").insertBefore(toolbar, video);
-  addAudioButton();
-}
-// Adds the Audio button (after Quality) once the video is known to have
-// dubs, which may be after the controls were created. Videos without dubs
-// get none.
-export function addAudioButton() {
-  const toolbar = document.querySelector("#spelare-toolbar");
-  const video = document.querySelector(
-    "video[data-spelare-video]:not([data-spelare-fallback])",
-  );
-  if (!toolbar || !video || toolbar.querySelector(".audio-language")) return;
-  const tracks = availableAudioTracks();
-  if (tracks.dubs.length === 0) return;
-  const audioButton = makeToolbarButton(
-    audioLanguageLabel(videoState.audioLanguage),
-    () =>
-      toggleMenu(toolbar, audioButton, () =>
-        openMenu(
-          toolbar,
-          audioButton,
-          "Audio",
-          audioMenuItems(tracks, videoState.audioLanguage),
-          (language) => setAudioLanguage(video, language),
-        ),
-      ),
-    "audio-language",
-  );
-  audioButton.title = "Audio language";
-  audioButton.setAttribute("aria-haspopup", "menu");
-  audioButton.setAttribute("aria-expanded", "false");
-  toolbar.querySelector(".controls .quality").after(audioButton);
 }
 // "Show quality buttons" off hides the controls in every layout.
 export function applyToolbarVisibility() {

@@ -346,6 +346,8 @@ video::cue(:future) {
     top: 6px !important;
     left: 50% !important;
     translate: -50% 0 !important;
+    /* Stays clear of Safari's corner groups (volume grows to ~210px). */
+    max-width: max(96px, calc(100% - 440px)) !important;
     display: flex !important;
     font-size: 0 !important;
     white-space: nowrap !important;
@@ -423,8 +425,7 @@ video::cue(:future) {
     background: rgba(255, 255, 255, 0.92) !important;
 }
 
-#spelare-toolbar .quality::before,
-#spelare-toolbar .audio-language::before,
+#spelare-toolbar .settings::before,
 #spelare-toolbar .theater::before {
     content: "" !important;
     display: block !important;
@@ -436,12 +437,8 @@ video::cue(:future) {
     mask: var(--spelare-icon) center / contain no-repeat !important;
 }
 
-#spelare-toolbar .quality {
+#spelare-toolbar .settings {
     --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M2 4.5h6.5M13.5 4.5H14M2 11.5h.5M7.5 11.5H14'/%3E%3Ccircle cx='11' cy='4.5' r='2'/%3E%3Ccircle cx='5' cy='11.5' r='2'/%3E%3C/svg%3E") !important;
-}
-
-#spelare-toolbar .audio-language {
-    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 2.5h9a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H8l-3.5 3v-3h-1a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z'/%3E%3Cpath d='M5 6h6M5 8.5h4'/%3E%3C/svg%3E") !important;
 }
 
 #spelare-toolbar .theater {
@@ -521,6 +518,85 @@ video::cue(:future) {
     height: 1px !important;
     margin: 5px 8px !important;
     background: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* The capsule: one group like Safari's own (same height, inset, radius and
+   material), with borderless segments inside. */
+#spelare-toolbar .controls {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: 46px !important;
+    padding: 4px !important;
+    gap: 2px !important;
+    border-radius: 23px !important;
+    box-sizing: border-box !important;
+    background: rgba(30, 30, 32, 0.55) !important;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+}
+
+#spelare-toolbar .controls .button {
+    height: 38px !important;
+    padding: 0 12px !important;
+    border-radius: 19px !important;
+    font: 500 14px/38px -apple-system, system-ui, sans-serif !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+#spelare-toolbar .controls .button:hover,
+#spelare-toolbar .controls .button[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+#spelare-toolbar .controls .button:active {
+    background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Icon-only segments are round, with a slightly larger icon. */
+#spelare-toolbar .controls .icon-only {
+    width: 38px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+}
+
+#spelare-toolbar .controls .icon-only::before {
+    width: 19px !important;
+    height: 19px !important;
+    margin: 0 !important;
+}
+
+/* Theater on: the same button, its icon filled rather than the button lit. */
+#spelare-toolbar .controls .theater.active {
+    color: rgba(255, 255, 255, 0.92) !important;
+    background: transparent !important;
+}
+
+#spelare-toolbar .controls .theater.active:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+#spelare-toolbar .controls .theater.active {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='black' stroke='black' stroke-width='1.6'%3E%3Crect x='1.5' y='3.5' width='13' height='9' rx='2'/%3E%3C/svg%3E") !important;
+}
+
+/* YouTube's player took over: a text segment in place of Settings. */
+#spelare-toolbar .controls .fallback {
+    color: #ffd60a !important;
+}
+
+/* A section title in a menu (Quality, Audio). */
+#spelare-toolbar .picker .menu-heading {
+    all: initial !important;
+    display: block !important;
+    padding: 6px 10px 2px 28px !important;
+    font: 600 11px/16px -apple-system, system-ui, sans-serif !important;
+    letter-spacing: 0.02em !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    text-transform: uppercase !important;
 }
 
 .ytp-small-mode #spelare-toolbar,
@@ -661,4 +737,64 @@ button:has(> .spelare-dislikes) {
 
 .spelare-dislikes {
     white-space: nowrap !important;
+}
+
+/* The Chapters button shows the current chapter's title, shortened to fit. */
+#spelare-toolbar .chapters {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M5.5 4h8M5.5 8h8M5.5 12h8'/%3E%3Ccircle cx='2.5' cy='4' r='.6' fill='black'/%3E%3Ccircle cx='2.5' cy='8' r='.6' fill='black'/%3E%3Ccircle cx='2.5' cy='12' r='.6' fill='black'/%3E%3C/svg%3E") !important;
+    display: inline-block !important;
+    flex: 0 1 auto !important;
+    min-width: 38px !important;
+    max-width: 260px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+#spelare-toolbar .chapters::before {
+    content: "" !important;
+    display: inline-block !important;
+    vertical-align: -3px !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 7px !important;
+    background-color: currentColor !important;
+    -webkit-mask: var(--spelare-icon) center / contain no-repeat !important;
+    mask: var(--spelare-icon) center / contain no-repeat !important;
+}
+
+/* Menu rows are one line: the label is cut short with "…" when it doesn't
+   fit, and a time (chapters) sits in a dimmed column of its own. */
+#spelare-toolbar .picker {
+    max-width: min(380px, 90vw) !important;
+}
+
+#spelare-toolbar .picker .button {
+    display: flex !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+}
+
+#spelare-toolbar .picker .menu-label,
+#spelare-toolbar .picker .menu-prefix {
+    all: initial !important;
+    font: inherit !important;
+    color: inherit !important;
+    white-space: nowrap !important;
+}
+
+#spelare-toolbar .picker .menu-label {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+#spelare-toolbar .picker .menu-prefix {
+    flex: none !important;
+    min-width: 4.4em !important;
+    margin-right: 10px !important;
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+    opacity: 0.6 !important;
 }
