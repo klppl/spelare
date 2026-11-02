@@ -39,7 +39,8 @@
 
 - [x] **Remember volume and speed** (per device: volume for every video, speed per channel).
 - [x] Per-channel speed (e.g. podcasts at 1.5×, music at 1×).
-- [ ] **Resume where you left off**, using YouTube's saved position instead of only `t=`.
+- [x] **Resume where you left off**: YouTube's links carry its saved position as `t=`; other opens use
+  positions Spelare keeps on this device, with a "Resumed at … · Start over" notice.
 - [x] **Volume levelling.** The player response includes each video's loudness; turn loud videos down
   to an even level.
 - [ ] **Audio-language picker.** Dubbed tracks are always filtered out today; let people choose one.
@@ -59,8 +60,6 @@ Each one a setting in the popup, similar to Unhook.
 - [x] **Toolbar badge** showing whether Spelare, YouTube's fallback player or nothing is playing in the
   current tab.
 - [x] **Settings apply without a reload.**
-- [ ] **Translate** the popup and the on-player toolbar (`_locales` only has English, and the popup
-  strings are hard-coded).
 
 ## Sync
 

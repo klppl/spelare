@@ -60,6 +60,8 @@
     showToolbar: { key: "showToolbar", fallback: true },
     // Turn loud videos down to YouTube's target level (playback-prefs.js).
     evenLoudness: { key: "evenLoudness", fallback: true },
+    // Reopen videos where they were left (resume.js).
+    resumePlayback: { key: "resumePlayback", fallback: true },
     captionsOnByDefault: { key: "showCaption", fallback: false },
     translationLanguage: {
       key: "subtitles",
@@ -1192,6 +1194,102 @@
     }, 100);
   }
 
+  // src/content/resume.js
+  var STORAGE_KEY = "resumePositions";
+  var MAX_VIDEOS = 500;
+  var MIN_DURATION_S = 120;
+  var MIN_POSITION_S = 30;
+  var END_MARGIN_S = 30;
+  var SAVE_EVERY_MS = 1e4;
+  var NOTICE_MS = 8e3;
+  var positions = {};
+  function isResumable(position, duration) {
+    return Number.isFinite(duration) && duration >= MIN_DURATION_S && position >= MIN_POSITION_S && position < duration - END_MARGIN_S && position < duration * 0.95;
+  }
+  function rememberPosition(map, videoId, position) {
+    delete map[videoId];
+    if (position !== null) map[videoId] = Math.floor(position);
+    const ids = Object.keys(map);
+    const excess = Math.max(ids.length - MAX_VIDEOS, 0);
+    for (const old of ids.slice(0, excess)) delete map[old];
+  }
+  function validPositions(stored) {
+    const valid = {};
+    if (stored && typeof stored === "object") {
+      for (const [videoId, position] of Object.entries(stored).slice(-MAX_VIDEOS))
+        if (/^[\w-]{1,64}$/.test(videoId) && Number.isFinite(position) && position > 0)
+          valid[videoId] = position;
+    }
+    return valid;
+  }
+  async function loadResumePositions() {
+    try {
+      const stored = await browser.storage.local.get(STORAGE_KEY);
+      positions = validPositions(stored[STORAGE_KEY]);
+    } catch (error) {
+      log("loadResumePositions:", error?.message || String(error));
+    }
+  }
+  function resumePositionFor(videoId) {
+    return settings.resumePlayback ? positions[videoId] ?? null : null;
+  }
+  async function storePosition(videoId, position) {
+    try {
+      const stored = await browser.storage.local.get(STORAGE_KEY);
+      positions = validPositions(stored[STORAGE_KEY]);
+      rememberPosition(positions, videoId, position);
+      await browser.storage.local.set({ [STORAGE_KEY]: positions });
+    } catch (error) {
+      log("storePosition:", error?.message || String(error));
+    }
+  }
+  function trackPosition(video, videoId) {
+    let lastSaved = 0;
+    const save2 = () => {
+      if (!settings.resumePlayback || !video.isConnected) return;
+      const position = video.currentTime;
+      const keep = isResumable(position, video.duration);
+      if (!keep && !(videoId in positions)) return;
+      lastSaved = performance.now();
+      storePosition(videoId, keep ? position : null);
+    };
+    video.addEventListener("timeupdate", () => {
+      if (!video.paused && performance.now() - lastSaved >= SAVE_EVERY_MS) save2();
+    });
+    video.addEventListener("pause", save2);
+    video.addEventListener("ended", () => storePosition(videoId, null));
+    window.addEventListener("pagehide", save2);
+  }
+  function formatTime(seconds) {
+    const s = Math.floor(seconds % 60);
+    const m = Math.floor(seconds / 60) % 60;
+    const h = Math.floor(seconds / 3600);
+    const pad = (n) => String(n).padStart(2, "0");
+    return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+  }
+  function showResumeNotice(video, position) {
+    document.querySelector("#spelare-resume")?.remove();
+    const notice = document.createElement("div");
+    notice.id = "spelare-resume";
+    notice.setAttribute("role", "status");
+    const text = document.createElement("span");
+    text.textContent = `Resumed at ${formatTime(position)}`;
+    const startOver = document.createElement("button");
+    startOver.type = "button";
+    startOver.textContent = "Start over";
+    startOver.addEventListener("mousedown", (event) => event.preventDefault());
+    startOver.addEventListener("click", (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      video.currentTime = 0;
+      notice.remove();
+    });
+    notice.append(text, startOver);
+    video.closest("div").insertBefore(notice, video);
+    setTimeout(() => notice.classList.add("leaving"), NOTICE_MS);
+    setTimeout(() => notice.remove(), NOTICE_MS + 400);
+  }
+
   // src/content/url.js
   var initialHref = null;
   try {
@@ -1637,6 +1735,7 @@
     syncHiddenPlayerProgress(video);
     setupMediaSession(video);
     setupDoubleClickFullscreen(video);
+    trackPosition(video, videoState.videoId);
     reportPlayerState("spelare");
   }
   function syncHiddenPlayerProgress(video) {
@@ -1662,7 +1761,15 @@
       startTime = startTimeFromNavigation();
       appliedInitialStartTime = true;
     }
-    if (startTime >= 0) video.currentTime = startTime;
+    if (startTime >= 0) {
+      video.currentTime = startTime;
+      return;
+    }
+    const resume = resumePositionFor(videoState.videoId);
+    if (resume === null) return;
+    log("resume:", resume);
+    video.currentTime = resume;
+    showResumeNotice(video, resume);
   }
 
   // src/content/streams.js
@@ -1960,6 +2067,7 @@
   function removeSpelareVideos() {
     const toolbar = document.querySelector("#spelare-toolbar");
     if (toolbar) toolbar.remove();
+    document.querySelector("#spelare-resume")?.remove();
     document.querySelectorAll("video[data-spelare-video]").forEach((video) => {
       video.pause();
       video.removeAttribute("src");
@@ -1981,7 +2089,11 @@
     injectPageScript("(() => {\n  try {\n    Object.defineProperty(window, \"setupCaptionMirroring\", {\n      get: () => function () {},\n      set() {},\n      configurable: false,\n    });\n  } catch (error) {}\n  function spelareVideo() {\n    return (\n      document.querySelector(\"video[data-spelare-video]\") ||\n      (location.pathname.startsWith(\"/embed/\")\n        ? document.querySelector(\"video\")\n        : null)\n    );\n  }\n  function subtitleTracks(video) {\n    return Array.from(video.textTracks).filter(\n      (track) => track.kind === \"subtitles\",\n    );\n  }\n  function isYouTubeForcedTrack(track) {\n    return track.kind === \"forced\" && track.label === \"YouTube Captions\";\n  }\n  const nativeModeDescriptor = Object.getOwnPropertyDescriptor(\n    TextTrack.prototype,\n    \"mode\",\n  );\n  if (nativeModeDescriptor?.set)\n    Object.defineProperty(TextTrack.prototype, \"mode\", {\n      configurable: true,\n      enumerable: nativeModeDescriptor.enumerable,\n      get() {\n        return nativeModeDescriptor.get.call(this);\n      },\n      set(mode) {\n        const video = spelareVideo();\n        if (\n          isYouTubeForcedTrack(this) &&\n          video &&\n          Array.from(video.textTracks).includes(this)\n        )\n          mode = \"disabled\";\n        nativeModeDescriptor.set.call(this, mode);\n      },\n    });\n  const mediaSession = navigator.mediaSession;\n  let updatingSession = false;\n  let captionHandlersInstalled = false;\n  const setNativeActionHandler =\n    mediaSession?.setActionHandler.bind(mediaSession);\n  if (mediaSession && \"captionTracks\" in mediaSession) {\n    for (const property of [\"captionTracks\", \"captionsEnabled\"]) {\n      let descriptor;\n      let proto = mediaSession;\n      for (; proto && !descriptor;) {\n        descriptor = Object.getOwnPropertyDescriptor(proto, property);\n        proto = Object.getPrototypeOf(proto);\n      }\n      if (descriptor?.set)\n        Object.defineProperty(mediaSession, property, {\n          configurable: true,\n          enumerable: descriptor.enumerable,\n          get() {\n            return descriptor.get.call(this);\n          },\n          set(value) {\n            if (!(!updatingSession && spelareVideo()))\n              descriptor.set.call(this, value);\n          },\n        });\n    }\n    mediaSession.setActionHandler = function (action, handler) {\n      if (\n        !spelareVideo() ||\n        ![\"togglecaptions\", \"selectcaptiontrack\"].includes(action)\n      )\n        return setNativeActionHandler(action, handler);\n    };\n  }\n  function syncMediaSessionCaptions(video) {\n    if (video !== spelareVideo()) return;\n    for (const track of video.textTracks)\n      if (isYouTubeForcedTrack(track) && track.mode !== \"disabled\")\n        track.mode = \"disabled\";\n    if (!mediaSession || !(\"captionTracks\" in mediaSession)) return;\n    installCaptionActionHandlers();\n    const tracks = subtitleTracks(video);\n    updatingSession = true;\n    try {\n      mediaSession.captionTracks = tracks.map((track) => ({\n        label: track.label,\n        language: track.language,\n        enabled: track.mode === \"showing\",\n      }));\n      mediaSession.captionsEnabled = tracks.some(\n        (track) => track.mode === \"showing\",\n      );\n    } finally {\n      updatingSession = false;\n    }\n  }\n  function installCaptionActionHandlers() {\n    if (captionHandlersInstalled) return;\n    try {\n      setNativeActionHandler(\"togglecaptions\", () => {\n        const video = spelareVideo();\n        if (!video) return;\n        const tracks = subtitleTracks(video);\n        if (tracks.some((track) => track.mode === \"showing\"))\n          selectSubtitleTrack(video, -1);\n        else {\n          const autoIndex = tracks.findIndex((track) =>\n            track.label.startsWith(\"Auto-translated\"),\n          );\n          selectSubtitleTrack(video, -1 === autoIndex ? 0 : autoIndex);\n        }\n      });\n      setNativeActionHandler(\"selectcaptiontrack\", (details) => {\n        const video = spelareVideo();\n        if (video) selectSubtitleTrack(video, details.trackIndex);\n      });\n      captionHandlersInstalled = true;\n    } catch (error) {}\n  }\n  function selectSubtitleTrack(video, selectedIndex) {\n    subtitleTracks(video).forEach((track, index) => {\n      track.mode = index === selectedIndex ? \"showing\" : \"disabled\";\n    });\n    syncMediaSessionCaptions(video);\n  }\n  const watchedVideos = new WeakSet();\n  function watchTextTracks(video) {\n    if (!watchedVideos.has(video)) {\n      watchedVideos.add(video);\n      [\"addtrack\", \"removetrack\", \"change\"].forEach((type) => {\n        video.textTracks.addEventListener(type, () =>\n          syncMediaSessionCaptions(video),\n        );\n      });\n    }\n    syncMediaSessionCaptions(video);\n  }\n  const nativeClassListAdd = DOMTokenList.prototype.add;\n  function keepPageVisible() {\n    document.addEventListener(\n      \"visibilitychange\",\n      (event) => {\n        event.stopImmediatePropagation();\n        event.stopPropagation();\n        event.preventDefault();\n      },\n      true,\n    );\n    document.addEventListener(\n      \"webkitvisibilitychange\",\n      (event) => {\n        event.stopImmediatePropagation();\n        event.stopPropagation();\n        event.preventDefault();\n      },\n      true,\n    );\n    window.addEventListener(\n      \"pagehide\",\n      (event) => {\n        event.stopImmediatePropagation();\n        event.stopPropagation();\n        event.preventDefault();\n      },\n      true,\n    );\n    Object.defineProperties(document, {\n      hidden: {\n        value: false,\n      },\n      visibilityState: {\n        value: \"visible\",\n      },\n    });\n  }\n  DOMTokenList.prototype.add = function (...tokens) {\n    nativeClassListAdd.apply(this, tokens);\n    if (tokens[0] !== \"ad-created\") return;\n    const player = document.querySelector(\"#movie_player\");\n    if (typeof player?.getPlayerResponse !== \"function\") return;\n    // Between videos there may be no response; this runs inside YouTube's\n    // own classList.add call, so it must not throw.\n    const response = player.getPlayerResponse();\n    if (!response) return;\n    if (response.playerAds) response.playerAds = [];\n    if (response.adPlacements) response.adPlacements = [];\n    if (response.adSlots) response.adSlots = [];\n  };\n  if (document.visibilityState === \"visible\") keepPageVisible();\n  else\n    document.addEventListener(\n      \"visibilitychange\",\n      function onVisible() {\n        if (document.visibilityState === \"visible\") {\n          document.removeEventListener(\"visibilitychange\", onVisible, true);\n          keepPageVisible();\n        }\n      },\n      true,\n    );\n  window.addEventListener(\n    \"keydown\",\n    (event) => {\n      if (\n        event.target.tagName === \"INPUT\" ||\n        event.target.tagName === \"SELECT\" ||\n        event.target.tagName === \"TEXTAREA\" ||\n        event.target.isContentEditable\n      )\n        return;\n      if (event.altKey || event.ctrlKey || event.metaKey) return;\n      const key = event.key.toLowerCase();\n      if (\"cfijklmqt,. <>\".includes(key)) {\n        event.stopImmediatePropagation();\n        if (key === \" \") event.preventDefault();\n      }\n    },\n    true,\n  );\n  const controlsObserver = new MutationObserver((mutations) => {\n    mutations.forEach((mutation) => {\n      const video = mutation.target;\n      if (!video.controls) video.controls = true;\n      if (!(video.readyState < 4)) {\n        if (true === video.webkitWirelessVideoPlaybackDisabled)\n          video.webkitWirelessVideoPlaybackDisabled = false;\n        if (true === video.disableRemotePlayback)\n          video.disableRemotePlayback = false;\n      }\n    });\n  });\n  function setupSpelareVideo() {\n    const video = document.querySelector(\n      \"video[data-spelare-video]:not([data-spelare-setup])\",\n    );\n    if (!video) return;\n    const container = video.closest(\"div\");\n    if (container) container.setAttribute(\"data-spelare-container\", true);\n    video.controls = true;\n    if (video.hasAttribute(\"data-spelare-fallback\"))\n      controlsObserver.observe(video, {\n        attributes: true,\n        attributeFilter: [\"controls\"],\n      });\n    video.addEventListener(\"click\", (event) => {\n      event.stopPropagation();\n    });\n    video.addEventListener(\"dblclick\", (event) => {\n      event.stopPropagation();\n    });\n    video.addEventListener(\"contextmenu\", (event) => {\n      event.stopPropagation();\n    });\n    watchTextTracks(video);\n    video.setAttribute(\"data-spelare-setup\", true);\n  }\n  function removeOtherVideos() {\n    if (!document.querySelector(\"video[data-spelare-video]\")) return;\n    const others = document.querySelectorAll(\"video:not([data-spelare-video])\");\n    if (others.length !== 0)\n      others.forEach((video) => {\n        video.remove();\n      });\n  }\n  function setupEmbedVideo() {\n    const video = document.querySelector(\"video:not([data-spelare-setup])\");\n    if (!video) return;\n    const container = video.closest(\"div\");\n    if (container) container.setAttribute(\"data-spelare-container\", true);\n    video.controls = true;\n    controlsObserver.observe(video, {\n      attributes: true,\n      attributeFilter: [\"controls\"],\n    });\n    video.addEventListener(\"contextmenu\", (event) => {\n      event.stopPropagation();\n    });\n    video.addEventListener(\"play\", (event) => {\n      const topControls = document.querySelector(\n        \".ytp-chrome-top, .ytwPlayerTopControlsHost\",\n      );\n      if (topControls) topControls.classList.remove(\"paused\");\n    });\n    video.addEventListener(\"pause\", (event) => {\n      const topControls = document.querySelector(\n        \".ytp-chrome-top, .ytwPlayerTopControlsHost\",\n      );\n      if (topControls) topControls.classList.add(\"paused\");\n    });\n    video.addEventListener(\"ended\", (event) => {\n      video.removeAttribute(\"data-spelare-video\");\n    });\n    video.setAttribute(\"data-spelare-video\", true);\n    watchTextTracks(video);\n    video.setAttribute(\"data-spelare-setup\", true);\n  }\n  if (location.pathname.startsWith(\"/embed/\")) {\n    window.addEventListener(\n      \"click\",\n      (event) => {\n        if (event.metaKey) return;\n        const path = event.composedPath();\n        for (let node of path)\n          if (\n            node.nodeType === 1 &&\n            node.nodeName === \"A\" &&\n            node.hasAttribute(\"href\")\n          ) {\n            if (node.isContentEditable) return;\n            event.preventDefault();\n            window.open(node.href, \"_blank\");\n          }\n      },\n      true,\n    );\n    setupEmbedVideo();\n  } else if (!location.pathname.startsWith(\"/shorts/\")) {\n    setupSpelareVideo();\n    removeOtherVideos();\n  }\n  new MutationObserver((mutations) => {\n    if (location.pathname.startsWith(\"/embed/\")) setupEmbedVideo();\n    else if (!location.pathname.startsWith(\"/shorts/\")) {\n      setupSpelareVideo();\n      removeOtherVideos();\n    }\n  }).observe(document.documentElement, {\n    childList: true,\n    subtree: true,\n  });\n})();\n");
     injectPageScript("(() => {\n  \"use strict\";\n  // src/shared/page-messages.js\n  var CONTENT_MESSAGE_SOURCE = \"spelare-content\";\n  var CONTENT_MESSAGE = {\n    PING: \"ping\",\n    PLAYER_COMMAND: \"player-command\"\n  };\n\n  // src/shared/namespace.js\n  var NAMESPACE = \"__spelare\";\n  function namespace() {\n    if (!Object.hasOwn(window, NAMESPACE))\n      Object.defineProperty(window, NAMESPACE, {\n        configurable: false,\n        enumerable: false,\n        value: /* @__PURE__ */ Object.create(null),\n        writable: false\n      });\n    return window[NAMESPACE];\n  }\n  function claimInstall(script) {\n    const installed = namespace();\n    if (installed[script]) return false;\n    Object.defineProperty(installed, script, {\n      configurable: false,\n      enumerable: true,\n      value: true,\n      writable: false\n    });\n    return true;\n  }\n\n  // src/shared/poll.js\n  async function pollFor(probe, { attempts, intervalMs, isCurrent = () => true }) {\n    for (let attempt = 0; attempt < attempts; attempt += 1) {\n      if (!isCurrent()) return null;\n      const value = probe();\n      if (value) return value;\n      if (attempt < attempts - 1)\n        await new Promise((resolve) => window.setTimeout(resolve, intervalMs));\n    }\n    return null;\n  }\n\n  // src/shared/video-id.js\n  function isValidVideoId(value) {\n    return typeof value === \"string\" && /^[a-zA-Z0-9_-]{1,128}$/.test(value);\n  }\n\n  // src/page/player-bridge.js\n  function moviePlayer() {\n    return document.getElementById(\"movie_player\") || document.getElementsByClassName(\"html5-video-player\")[0];\n  }\n  function withPlayer(action) {\n    return (...args) => {\n      const player = moviePlayer();\n      if (player) action(player, ...args);\n    };\n  }\n  function fitVideoToPlayer(player) {\n    const video = document.querySelector(\"video[data-spelare-video]\");\n    if (!video) return;\n    player.addEventListener(\"resize\", (event) => {\n      video.style.width = event.width + \"px\";\n      video.style.height = event.height + \"px\";\n    });\n    const size = player.getPlayerSize();\n    video.style.width = size.width + \"px\";\n    video.style.height = size.height + \"px\";\n  }\n  function isOriginalAudioTrack(track) {\n    try {\n      return atob(track.id.split(\";\")[1]).includes(\"original\");\n    } catch {\n      return false;\n    }\n  }\n  function fallBack(player, { videoId, startTime, quality }) {\n    player.loadVideoById(videoId, startTime, quality);\n    player.unMute();\n    if (player.getAvailableAudioTracks) {\n      const original = player.getAvailableAudioTracks().find(isOriginalAudioTrack);\n      if (original) player.setAudioTrack(original);\n    }\n    pollFor(() => document.querySelector(\"video\"), {\n      attempts: 30,\n      intervalMs: 1e3\n    }).then((video) => {\n      if (!video) return;\n      video.setAttribute(\"data-spelare-fallback\", true);\n      video.setAttribute(\"data-spelare-video\", true);\n    });\n  }\n  function isFallbackRequest(request) {\n    return isValidVideoId(request?.videoId) && Number.isFinite(request.startTime) && typeof request.quality === \"string\";\n  }\n  var COMMANDS = {\n    nextVideo: withPlayer((player) => player.nextVideo()),\n    previousVideo: withPlayer((player) => player.previousVideo()),\n    // Keeps YouTube's hidden player silent and paused behind the Spelare video.\n    silence: withPlayer((player) => {\n      player.mute();\n      player.pauseVideo();\n    }),\n    // Keeps the hidden player's position (watch history, resume point) in step.\n    syncTime: withPlayer((player, seconds) => {\n      if (!Number.isFinite(seconds)) return;\n      player.seekTo(seconds);\n      player.mute();\n      player.pauseVideo();\n    }),\n    fitVideoToPlayer: withPlayer(fitVideoToPlayer),\n    fallBack: withPlayer((player, request) => {\n      if (isFallbackRequest(request)) fallBack(player, request);\n    }),\n    // The player's own theater button: still in the page (mac.css hides\n    // YouTube's controls, it doesn't remove them). The hotkey manager's method\n    // is what older YouTube versions offered.\n    toggleTheaterMode: () => {\n      const sizeButton = document.querySelector(\".ytp-size-button\");\n      if (sizeButton) {\n        sizeButton.click();\n        return;\n      }\n      const hotkeys = document.querySelector(\"yt-Hotkey-Manager\");\n      if (typeof hotkeys?.toggleTheaterMode === \"function\")\n        hotkeys.toggleTheaterMode();\n    }\n  };\n  function install() {\n    window.addEventListener(\"message\", (event) => {\n      if (event.source !== window || event.origin !== location.origin || event.data?.source !== CONTENT_MESSAGE_SOURCE || event.data.type !== CONTENT_MESSAGE.PLAYER_COMMAND)\n        return;\n      const { command, args } = event.data;\n      if (!Object.hasOwn(COMMANDS, command) || !Array.isArray(args)) return;\n      COMMANDS[command](...args);\n    });\n  }\n  if (claimInstall(\"playerBridge\")) install();\n})();\n");
     listenForPageMessages(isTopFrame);
-    await Promise.all([loadSettings(), loadPlaybackPrefs()]);
+    await Promise.all([
+      loadSettings(),
+      loadPlaybackPrefs(),
+      loadResumePositions()
+    ]);
     applyHideSettings();
     setupHideGuard();
     setupLiveSettings();

@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Checkboxes for parts of YouTube to hide; each is off unless set.
     let hideSettings = ['hideShorts', 'hideRecommendations', 'hideComments', 'hideEndScreens'];
-    let settings = ['autoplay', 'evenLoudness', 'quality', 'showToolbar', 'showCaption', 'subtitles', ...hideSettings];
+    let settings = ['autoplay', 'resumePlayback', 'evenLoudness', 'quality', 'showToolbar', 'showCaption', 'subtitles', ...hideSettings];
     browser.storage.sync.get(settings).then((results) => {
         let autoplay = typeof(results.autoplay) === 'undefined' ? false : results.autoplay;
         // Values older versions offered: 4320p never worked (it played Auto),
@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.querySelector('#autoplay').checked = autoplay;
         document.querySelector('#evenLoudness').checked = results.evenLoudness !== false;
+        document.querySelector('#resumePlayback').checked = results.resumePlayback !== false;
         document.querySelector('#quality').value = quality;
         document.querySelector('#quality').dispatchEvent(new Event('change'));
         document.querySelector('#showToolbar').checked = showToolbar;
@@ -33,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let autoplay = document.querySelector('#autoplay');
     autoplay.addEventListener('change', () => {
         browser.storage.sync.set({ autoplay: autoplay.checked });
+    });
+
+    let resumePlayback = document.querySelector('#resumePlayback');
+    resumePlayback.addEventListener('change', () => {
+        browser.storage.sync.set({ resumePlayback: resumePlayback.checked });
     });
 
     let evenLoudness = document.querySelector('#evenLoudness');

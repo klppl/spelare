@@ -12,6 +12,8 @@ const STORED_SETTINGS = {
   showToolbar: { key: "showToolbar", fallback: true },
   // Turn loud videos down to YouTube's target level (playback-prefs.js).
   evenLoudness: { key: "evenLoudness", fallback: true },
+  // Reopen videos where they were left (resume.js).
+  resumePlayback: { key: "resumePlayback", fallback: true },
   captionsOnByDefault: { key: "showCaption", fallback: false },
   translationLanguage: {
     key: "subtitles",

@@ -7,7 +7,12 @@ import { callPlayer } from "./player.js";
 import { playNextVideo, setupDoubleClickFullscreen } from "./playback.js";
 import { reportPlayerState } from "./player-state.js";
 import { setupPlaybackRecovery } from "./recovery.js";
-import { settings } from "./state.js";
+import {
+  resumePositionFor,
+  showResumeNotice,
+  trackPosition,
+} from "./resume.js";
+import { settings, videoState } from "./state.js";
 import { applyToolbarVisibility, createToolbar } from "./toolbar.js";
 import { parseStartTime, startTimeFromNavigation } from "./url.js";
 
@@ -31,6 +36,7 @@ export function setupVideo(video) {
   syncHiddenPlayerProgress(video);
   setupMediaSession(video);
   setupDoubleClickFullscreen(video);
+  trackPosition(video, videoState.videoId);
   reportPlayerState("spelare");
 }
 export function syncHiddenPlayerProgress(video) {
@@ -56,5 +62,14 @@ export function applyStartTime(video) {
     startTime = startTimeFromNavigation();
     appliedInitialStartTime = true;
   }
-  if (startTime >= 0) video.currentTime = startTime;
+  if (startTime >= 0) {
+    video.currentTime = startTime;
+    return;
+  }
+  // No start time in the link: where this video was left, if anywhere.
+  const resume = resumePositionFor(videoState.videoId);
+  if (resume === null) return;
+  log("resume:", resume);
+  video.currentTime = resume;
+  showResumeNotice(video, resume);
 }

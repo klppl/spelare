@@ -18,6 +18,7 @@ import { reportPlayerState } from "./player-state.js";
 import { applyHideSettings } from "./page-cleanup.js";
 import { setupHideGuard } from "./hide-guard.js";
 import { loadPlaybackPrefs } from "./playback-prefs.js";
+import { loadResumePositions } from "./resume.js";
 import { loadSettings, videoState } from "./state.js";
 import { obtainAudioStream, obtainVideoStream } from "./streams.js";
 import { handleExtensionError, STREAM_NOT_FOUND_NOTICE } from "./fallback.js";
@@ -131,6 +132,7 @@ function handleURLChange() {
 function removeSpelareVideos() {
   const toolbar = document.querySelector("#spelare-toolbar");
   if (toolbar) toolbar.remove();
+  document.querySelector("#spelare-resume")?.remove();
   document.querySelectorAll("video[data-spelare-video]").forEach((video) => {
     video.pause();
     video.removeAttribute("src");
@@ -155,7 +157,11 @@ function removeSpelareVideos() {
   injectPageScript(__SPELARE_PAGE_SCRIPT__("caption-mirroring"));
   injectPageScript(__SPELARE_PAGE_SCRIPT__("player-bridge"));
   listenForPageMessages(isTopFrame);
-  await Promise.all([loadSettings(), loadPlaybackPrefs()]);
+  await Promise.all([
+    loadSettings(),
+    loadPlaybackPrefs(),
+    loadResumePositions(),
+  ]);
   applyHideSettings();
   setupHideGuard();
   setupLiveSettings();

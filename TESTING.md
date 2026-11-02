@@ -67,6 +67,9 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
    brings the music video back to full level at once.
    Changing "Default quality" in the popup switches the open video; "Show quality buttons" applies at once.
 5. `?t=1m30s` link starts at 1:30; clicking a timestamp in the description seeks without reloading.
+   Watch a long video for a few minutes, then reload it (or open its plain `/watch?v=` URL): it resumes
+   there, with "Resumed at … · Start over" above the play bar; Start over goes back to 0:00. Finishing
+   a video, or unticking "Resume videos where I left off", starts it from the beginning next time.
 6. SPA navigation: click a related video; the old stream is torn down and the new one plays.
 7. Autoplay on (popup): video end advances to the next video. Media keys: play/pause/next/previous.
    Reloading mid-video, then checking YouTube's history, shows the position you were at (hidden-player sync).
