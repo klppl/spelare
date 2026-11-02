@@ -17,6 +17,7 @@ import { injectPageScript } from "./page.js";
 import { reportPlayerState } from "./player-state.js";
 import { applyHideSettings } from "./page-cleanup.js";
 import { setupHideGuard } from "./hide-guard.js";
+import { setupDislikes } from "./dislikes.js";
 import { loadPlaybackPrefs } from "./playback-prefs.js";
 import { loadResumePositions } from "./resume.js";
 import { loadSettings, videoState } from "./state.js";
@@ -122,6 +123,9 @@ function handleURLChange() {
     videoState.response = null;
     videoState.details = null;
     videoState.captionChoice = undefined;
+    videoState.audioLanguage = null;
+    videoState.originalAudioURL = null;
+    videoState.dubMaster = null;
     videoState.playlistContent = null;
     videoState.streams = {};
     removeSpelareVideos();
@@ -164,6 +168,7 @@ function removeSpelareVideos() {
   ]);
   applyHideSettings();
   setupHideGuard();
+  setupDislikes();
   setupLiveSettings();
   log("handleLinkClicks");
   window.addEventListener(

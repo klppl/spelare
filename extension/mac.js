@@ -60,6 +60,9 @@
     showToolbar: { key: "showToolbar", fallback: true },
     // Turn loud videos down to YouTube's target level (playback-prefs.js).
     evenLoudness: { key: "evenLoudness", fallback: true },
+    // Dislike counts from Return YouTube Dislike (dislikes.js); off by default
+    // because it sends each watched video's id to that service.
+    showDislikes: { key: "showDislikes", fallback: false },
     // Reopen videos where they were left (resume.js).
     resumePlayback: { key: "resumePlayback", fallback: true },
     captionsOnByDefault: { key: "showCaption", fallback: false },
@@ -86,6 +89,13 @@
     videoId: null,
     // Title and channel for Now Playing, once the player response has them.
     details: null,
+    // The dub picked from the Audio menu (a language code), or null for the
+    // original audio; and the original audio-only stream (stream-urls.js).
+    audioLanguage: null,
+    originalAudioURL: null,
+    // The visionOS master playlist, which lists dubs when the played one
+    // doesn't (stream-urls.js).
+    dubMaster: null,
     // The caption track chosen for this video: undefined until the default or
     // the user picks one, null for off, else a track label (see captions.js).
     captionChoice: void 0,
@@ -528,6 +538,182 @@
     );
   }
 
+  // src/content/playlist.js
+  function describePlaylist(dataURL) {
+    if (!dataURL) return "no playable variant";
+    const playlistLines = atob(dataURL.split(",")[1]).split("\n");
+    const heightsByCodec = {};
+    for (let line of playlistLines) {
+      if (!line.startsWith("#EXT-X-STREAM-INF")) continue;
+      const codec = line.match(/CODECS="([^".,]+)/)?.[1] ?? "unknown";
+      const height = Number(line.match(/RESOLUTION=\d+x(\d+)/)?.[1]);
+      if (height) (heightsByCodec[codec] ??= []).push(height);
+    }
+    const ranges = Object.entries(heightsByCodec).map(
+      ([codec, heights]) => `${codec} ${Math.min(...heights)}p–${Math.max(...heights)}p`
+    );
+    const audioCount = playlistLines.filter(
+      (line) => line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO")
+    ).length;
+    return `${ranges.join(", ")}; ${audioCount} audio renditions`;
+  }
+  function rewritePlaylist(lines, width, dubLanguage = null) {
+    let hasVariant = false;
+    let includeNextLine = false;
+    const output = [];
+    const isDub = (line) => audioKind(line) === "dubbed" && audioLanguage(line) === dubLanguage;
+    const dubGroups = new Set(
+      dubLanguage === null ? [] : lines.flatMap(
+        (line) => isAudioMedia(line) && isDub(line) ? [attribute(line, "GROUP-ID")] : []
+      )
+    );
+    const keepMedia = (line) => dubLanguage === null ? isAllowedRendition(line, hasOriginalAudio) : isDub(line);
+    const keepVariant = (line) => dubLanguage === null ? isAllowedRendition(
+      line,
+      resolutionsWithOriginal.has(resolutionOf(line))
+    ) : dubGroups.has(attribute(line, "AUDIO"));
+    const asDefault = (line) => dubLanguage === null ? line : line.replace("DEFAULT=NO", "DEFAULT=YES");
+    const hasOriginalAudio = lines.some(
+      (line) => line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO") && audioKind(line) === "original"
+    );
+    const resolutionsWithOriginal = new Set(
+      lines.flatMap((line) => {
+        if (!line.startsWith("#EXT-X-STREAM-INF") || audioKind(line) !== "original")
+          return [];
+        const resolution = resolutionOf(line);
+        return resolution ? [resolution] : [];
+      })
+    );
+    for (let line of lines)
+      if (includeNextLine) {
+        includeNextLine = false;
+        output.push(line);
+      } else if (line.startsWith("#EXTM3U") || line.startsWith("#EXT-X-INDEPENDENT-SEGMENTS"))
+        output.push(line);
+      else if (isAudioMedia(line) && keepMedia(line))
+        output.push(asDefault(line));
+      else if (void 0 === width && line.includes("RESOLUTION=") || line.includes(`RESOLUTION=${width}x`)) {
+        if (!keepVariant(line)) continue;
+        const parts = line.split("SUBTITLES=");
+        const beforeSubtitles = parts[0];
+        includeNextLine = true;
+        hasVariant = true;
+        if (parts.length > 1)
+          output.push(`${beforeSubtitles}CLOSED-CAPTIONS=NONE`);
+        else output.push(beforeSubtitles);
+      }
+    if (hasVariant) {
+      const playlist = output.join("\n");
+      return `data:application/vnd.apple.mpegURL;base64,${btoa(encodeURIComponent(playlist).replace(/%([0-9A-F]{2})/g, (_match, hex) => String.fromCharCode("0x" + hex)))}`;
+    }
+    return false;
+  }
+  function pickAudioRendition(lines, dubLanguage = null) {
+    const renditions = [];
+    for (let line of lines)
+      if (isAudioMedia(line)) {
+        const uri = line.match(/URI="(.+?)"/)?.[1];
+        if (uri)
+          renditions.push({
+            default: line.includes("DEFAULT=YES"),
+            highQuality: /\/itag\/234(?:\/|$)/.test(uri),
+            kind: audioKind(`${line} ${uri}`),
+            language: audioLanguage(line),
+            url: uri
+          });
+      }
+    let candidates;
+    if (dubLanguage !== null)
+      candidates = renditions.filter(
+        (rendition) => rendition.kind === "dubbed" && rendition.language === dubLanguage
+      );
+    else {
+      candidates = renditions.filter((rendition) => rendition.kind !== "dubbed");
+      const originals = candidates.filter(
+        (rendition) => rendition.kind === "original"
+      );
+      if (originals.length > 0) candidates = originals;
+    }
+    candidates.sort(
+      (a, b) => Number(b.highQuality) - Number(a.highQuality) || Number(b.default) - Number(a.default)
+    );
+    return candidates[0]?.url;
+  }
+  function isAllowedRendition(line, requireOriginal) {
+    const kind = audioKind(line);
+    return kind !== "dubbed" && (!requireOriginal || kind === "original");
+  }
+  function audioKind(line) {
+    const lower = line.toLowerCase();
+    if (lower.includes("dubbed")) return "dubbed";
+    if (lower.includes("original")) return "original";
+    const decoded = decodeXtags(line)?.toLowerCase();
+    if (decoded?.includes("dubbed")) return "dubbed";
+    if (decoded?.includes("original")) return "original";
+    return null;
+  }
+  function decodeXtags(line) {
+    const xtags = line.match(/YT-EXT-XTAGS="([^"]+)"/)?.[1];
+    if (!xtags) return null;
+    try {
+      let base64 = xtags.replace(/-/g, "+").replace(/_/g, "/");
+      base64 += "=".repeat((4 - base64.length % 4) % 4);
+      return atob(base64);
+    } catch {
+      return null;
+    }
+  }
+  function audioLanguage(line) {
+    return decodeXtags(line)?.match(/(?:^|:)lang=([\w-]+)/)?.[1] ?? attribute(line, "LANGUAGE");
+  }
+  function isAudioMedia(line) {
+    return line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO");
+  }
+  function attribute(line, name) {
+    return line.match(new RegExp(`(?:^|[:,])${name}="([^"]*)"`))?.[1] ?? null;
+  }
+  function audioTracks(lines) {
+    const dubs = /* @__PURE__ */ new Set();
+    let original = null;
+    for (const line of lines) {
+      if (!isAudioMedia(line)) continue;
+      const kind = audioKind(line);
+      const language = audioLanguage(line);
+      if (kind === "dubbed" && language) dubs.add(language);
+      else if (kind === "original" && language) original ??= language;
+    }
+    return { original, dubs: [...dubs] };
+  }
+  function resolutionOf(line) {
+    return line.match(/RESOLUTION=([^,]+)/)?.[1] ?? null;
+  }
+
+  // src/content/stream-urls.js
+  var NO_TRACKS = { original: null, dubs: [] };
+  function dubPlaylistLines() {
+    for (const content of [videoState.playlistContent, videoState.dubMaster]) {
+      const lines = content?.split("\n");
+      if (lines && audioTracks(lines).dubs.length > 0) return lines;
+    }
+    return null;
+  }
+  function availableAudioTracks() {
+    const lines = dubPlaylistLines();
+    return lines ? audioTracks(lines) : NO_TRACKS;
+  }
+  function buildStreams() {
+    const dub = videoState.audioLanguage;
+    const lines = dub === null ? videoState.playlistContent.split("\n") : dubPlaylistLines() ?? videoState.playlistContent.split("\n");
+    const streams = { auto: rewritePlaylist(lines, void 0, dub) };
+    for (const quality of VIDEO_QUALITIES) {
+      const streamURL = rewritePlaylist(lines, quality.width, dub);
+      if (streamURL) streams[quality.id] = streamURL;
+    }
+    const audio = dub === null ? videoState.originalAudioURL || pickAudioRendition(lines) : pickAudioRendition(lines, dub);
+    if (audio) streams.audio = audio;
+    videoState.streams = streams;
+  }
+
   // src/content/player-state.js
   var SHORT_QUALITY = {
     "2160p": "4K",
@@ -589,31 +775,36 @@
     ).reverse(),
     "audio"
   ];
-  function showQualityPicker(video, toolbar) {
-    const picker = document.createElement("div");
-    picker.classList.add("picker");
-    picker.setAttribute("role", "menu");
-    picker.setAttribute("aria-label", "Quality");
-    for (const quality of MENU_QUALITIES) {
-      if (!videoState.streams[quality]) continue;
-      if (quality === "audio" && picker.childElementCount > 0) {
+  function openMenu(toolbar, anchor, name, items, onPick) {
+    closeMenu(toolbar);
+    const menu = document.createElement("div");
+    menu.classList.add("picker");
+    menu.setAttribute("role", "menu");
+    menu.setAttribute("aria-label", name);
+    menu.style.setProperty("--spelare-menu-left", `${anchor.offsetLeft}px`);
+    for (const item of items) {
+      if (item.separatorBefore && menu.childElementCount > 0) {
         const separator = document.createElement("div");
         separator.classList.add("separator");
         separator.setAttribute("role", "separator");
-        picker.appendChild(separator);
+        menu.appendChild(separator);
       }
-      picker.appendChild(qualityOption(video, toolbar, quality));
+      const button = makeToolbarButton(item.label, () => {
+        closeMenu(toolbar);
+        onPick(item.id);
+      });
+      button.setAttribute("role", "menuitemradio");
+      button.classList.toggle("active", item.active);
+      button.setAttribute("aria-checked", String(item.active));
+      menu.appendChild(button);
     }
     const dismiss = new AbortController();
-    picker.dismiss = dismiss;
-    const cancel = () => closeQualityPicker(
-      toolbar,
-      qualityLabel(videoState.activeQuality || settings.quality)
-    );
+    menu.dismiss = dismiss;
+    menu.anchor = anchor;
     document.addEventListener(
       "pointerdown",
       (event) => {
-        if (!toolbar.contains(event.target)) cancel();
+        if (!toolbar.contains(event.target)) closeMenu(toolbar);
       },
       { capture: true, signal: dismiss.signal }
     );
@@ -623,26 +814,99 @@
         if (event.key !== "Escape") return;
         event.stopImmediatePropagation();
         event.preventDefault();
-        cancel();
+        closeMenu(toolbar);
       },
       { capture: true, signal: dismiss.signal }
     );
-    toolbar.appendChild(picker);
-    toolbar.querySelector(".quality")?.setAttribute("aria-expanded", "true");
+    toolbar.appendChild(menu);
+    fitMenu(toolbar, menu);
+    anchor.setAttribute("aria-expanded", "true");
     toolbar.updateVisibility?.();
   }
-  function qualityOption(video, toolbar, quality) {
-    const label = qualityLabel(quality);
-    const button = makeToolbarButton(label, () => {
-      setQuality(video, quality, { save: true });
-      closeQualityPicker(toolbar, label);
-    });
-    button.setAttribute("data-spelare-quality", quality);
-    button.setAttribute("role", "menuitemradio");
-    const active = (videoState.activeQuality || settings.quality) === quality;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-checked", String(active));
-    return button;
+  function fitMenu(toolbar, menu) {
+    const video = toolbar.parentElement?.querySelector(
+      "video[data-spelare-video]"
+    );
+    if (video) {
+      const top = toolbar.offsetTop + toolbar.offsetHeight + 6;
+      const room = video.clientHeight - top - MENU_BOTTOM_MARGIN_PX;
+      menu.style.setProperty(
+        "--spelare-menu-max-height",
+        `${Math.max(room, MENU_MIN_HEIGHT_PX)}px`
+      );
+    }
+    menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+  }
+  var MENU_BOTTOM_MARGIN_PX = 52;
+  var MENU_MIN_HEIGHT_PX = 120;
+  function closeMenu(toolbar) {
+    const menu = toolbar.querySelector(".picker");
+    if (!menu) return;
+    menu.dismiss.abort();
+    menu.anchor.setAttribute("aria-expanded", "false");
+    menu.remove();
+    toolbar.updateVisibility?.();
+  }
+  function toggleMenu(toolbar, anchor, open) {
+    if (toolbar.querySelector(".picker")?.anchor === anchor) closeMenu(toolbar);
+    else open();
+  }
+  function showQualityPicker(video, toolbar, anchor) {
+    const current2 = videoState.activeQuality || settings.quality;
+    const items = MENU_QUALITIES.filter(
+      (quality) => videoState.streams[quality]
+    ).map((quality) => ({
+      id: quality,
+      label: qualityLabel(quality),
+      active: quality === current2,
+      separatorBefore: quality === "audio"
+    }));
+    openMenu(
+      toolbar,
+      anchor,
+      "Quality",
+      items,
+      (quality) => setQuality(video, quality, { save: true })
+    );
+  }
+  function audioLanguageLabel(language) {
+    return language === null ? "Original" : languageLabel(language);
+  }
+  function languageLabel(code) {
+    const name = languageName(code);
+    return name === "System" ? code : name;
+  }
+  function audioMenuItems({ original, dubs }, current2) {
+    return [
+      {
+        id: null,
+        label: original ? `Original (${languageLabel(original)})` : "Original",
+        active: current2 === null,
+        separatorBefore: false
+      },
+      ...dubs.map((language) => ({
+        id: language,
+        label: languageLabel(language),
+        active: current2 === language,
+        separatorBefore: false
+      })).sort((a, b) => a.label.localeCompare(b.label))
+    ].map((item, index) => ({ ...item, separatorBefore: index === 1 }));
+  }
+  function setAudioLanguage(video, language) {
+    if (language === videoState.audioLanguage) return;
+    log("setAudioLanguage:", language ?? "original");
+    videoState.audioLanguage = language;
+    buildStreams();
+    const quality = videoState.activeQuality === "audio" && videoState.streams.audio ? "audio" : playableQuality(videoState.activeQuality ?? "auto");
+    if (!quality) return;
+    videoState.activeQuality = quality;
+    switchVideoSource(video, videoState.streams[quality]);
+    const toolbar = document.querySelector("#spelare-toolbar");
+    const qualityButton = toolbar?.querySelector(".controls .quality");
+    if (qualityButton) qualityButton.textContent = qualityLabel(quality);
+    const audioButton = toolbar?.querySelector(".controls .audio-language");
+    if (audioButton) audioButton.textContent = audioLanguageLabel(language);
+    reportPlayerState("spelare");
   }
   function playableQuality(wanted) {
     if (videoState.streams[wanted]) return wanted;
@@ -688,28 +952,19 @@
     reportPlayerState("spelare");
     return true;
   }
-  function closeQualityPicker(toolbar, label) {
-    const picker = toolbar.querySelector(".picker");
-    picker?.dismiss?.abort();
-    picker?.remove();
-    const qualityButton = toolbar.querySelector(".quality");
-    qualityButton.textContent = label;
-    qualityButton.setAttribute("aria-expanded", "false");
-    toolbar.updateVisibility?.();
-  }
   function isTheaterMode() {
     return document.querySelector("ytd-watch-flexy")?.hasAttribute("theater") ?? false;
   }
   function trackTheaterMode(button) {
-    const update = () => {
+    const update2 = () => {
       const theater = isTheaterMode();
       button.classList.toggle("active", theater);
       button.setAttribute("aria-pressed", String(theater));
     };
-    update();
+    update2();
     const watchPage = document.querySelector("ytd-watch-flexy");
     if (watchPage)
-      new MutationObserver(update).observe(watchPage, {
+      new MutationObserver(update2).observe(watchPage, {
         attributes: true,
         attributeFilter: ["theater"]
       });
@@ -719,7 +974,7 @@
     let pointerActive = false;
     let overControls = false;
     let idleTimer;
-    const update = () => {
+    const update2 = () => {
       const show = pointerActive || overControls || video.paused || toolbar.querySelector(".picker") !== null;
       toolbar.classList.toggle("visible", show);
     };
@@ -727,27 +982,27 @@
       clearTimeout(idleTimer);
       idleTimer = setTimeout(() => {
         pointerActive = false;
-        update();
+        update2();
       }, delay);
     };
     video.addEventListener("mousemove", () => {
       pointerActive = true;
-      update();
+      update2();
       settleAfter(HIDE_DELAY_MS);
     });
     video.addEventListener("mouseleave", () => settleAfter(150));
     toolbar.addEventListener("mouseenter", () => {
       overControls = true;
-      update();
+      update2();
     });
     toolbar.addEventListener("mouseleave", () => {
       overControls = false;
-      update();
+      update2();
     });
-    video.addEventListener("play", update);
-    video.addEventListener("pause", update);
-    update();
-    return update;
+    video.addEventListener("play", update2);
+    video.addEventListener("pause", update2);
+    update2();
+    return update2;
   }
   function createToolbar(video) {
     log("createToolbar");
@@ -758,11 +1013,11 @@
     toolbar.appendChild(controls);
     const qualityButton = makeToolbarButton(
       qualityLabel(videoState.activeQuality || settings.quality),
-      () => {
-        if (toolbar.querySelector(".picker"))
-          closeQualityPicker(toolbar, qualityButton.textContent);
-        else showQualityPicker(video, toolbar);
-      },
+      () => toggleMenu(
+        toolbar,
+        qualityButton,
+        () => showQualityPicker(video, toolbar, qualityButton)
+      ),
       "quality"
     );
     qualityButton.title = "Quality (Q / Shift-Q)";
@@ -779,6 +1034,35 @@
     trackTheaterMode(theaterButton);
     toolbar.updateVisibility = autoHide(toolbar, video);
     video.closest("div").insertBefore(toolbar, video);
+    addAudioButton();
+  }
+  function addAudioButton() {
+    const toolbar = document.querySelector("#spelare-toolbar");
+    const video = document.querySelector(
+      "video[data-spelare-video]:not([data-spelare-fallback])"
+    );
+    if (!toolbar || !video || toolbar.querySelector(".audio-language")) return;
+    const tracks = availableAudioTracks();
+    if (tracks.dubs.length === 0) return;
+    const audioButton = makeToolbarButton(
+      audioLanguageLabel(videoState.audioLanguage),
+      () => toggleMenu(
+        toolbar,
+        audioButton,
+        () => openMenu(
+          toolbar,
+          audioButton,
+          "Audio",
+          audioMenuItems(tracks, videoState.audioLanguage),
+          (language) => setAudioLanguage(video, language)
+        )
+      ),
+      "audio-language"
+    );
+    audioButton.title = "Audio language";
+    audioButton.setAttribute("aria-haspopup", "menu");
+    audioButton.setAttribute("aria-expanded", "false");
+    toolbar.querySelector(".controls .quality").after(audioButton);
   }
   function applyToolbarVisibility() {
     log("showHideToolbar");
@@ -892,6 +1176,170 @@
     return true;
   }
 
+  // src/content/url.js
+  var initialHref = null;
+  try {
+    initialHref = location.href;
+  } catch {
+  }
+  function startTimeFromNavigation() {
+    const startTime = parseStartTime(location);
+    if (startTime >= 0) return startTime;
+    const navigationURL = navigationEntryURL();
+    return videoIdFromURL(navigationURL) && videoIdFromURL(navigationURL) === currentVideoId() ? parseStartTime(navigationURL) : -1;
+  }
+  function navigationEntryURL() {
+    try {
+      const entry = performance.getEntriesByType("navigation")[0];
+      if (entry?.name) return new URL(entry.name, location.href);
+    } catch {
+    }
+    return new URL(initialHref || location.href);
+  }
+  function parseStartTime(url) {
+    const params = new URLSearchParams(url.search);
+    const value = params.get("t") ?? params.get("start");
+    if (value === null) return -1;
+    if (/^\d+$/.test(value)) return parseInt(value);
+    const hms = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+    if (!hms || value === "") return -1;
+    const [hours, minutes, seconds] = hms.slice(1).map((part) => Number(part ?? 0));
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+  function videoIdFromURL(url) {
+    if (url.pathname !== "/watch") return void 0;
+    const videoId = new URLSearchParams(url.search).get("v");
+    return isValidVideoId(videoId) ? videoId : void 0;
+  }
+  function currentVideoId() {
+    const videoId = videoIdFromURL(location);
+    if (videoId || location.pathname !== "/watch") return videoId;
+    const canonicalHref = document.querySelector('link[rel="canonical"]')?.href;
+    if (canonicalHref)
+      try {
+        return videoIdFromURL(new URL(canonicalHref, location.href));
+      } catch {
+      }
+  }
+
+  // src/content/dislikes.js
+  var API = "https://returnyoutubedislikeapi.com/votes?videoId=";
+  var DISLIKE_BUTTON = [
+    "segmented-like-dislike-button-view-model dislike-button-view-model button",
+    "dislike-button-view-model button",
+    "#segmented-dislike-button button",
+    "ytd-toggle-button-renderer#dislike-button button"
+  ].join(", ");
+  var COUNT_CLASS = "spelare-dislikes";
+  var CHANGED_BUTTON = "data-spelare-dislikes-button";
+  var BUTTON_CLASSES = [
+    ["ytSpecButtonShapeNextIconButton", "ytSpecButtonShapeNextIconLeading"],
+    [
+      "yt-spec-button-shape-next--icon-button",
+      "yt-spec-button-shape-next--icon-leading"
+    ]
+  ];
+  var TEXT_CLASSES = [
+    "ytSpecButtonShapeNextButtonTextContent",
+    "yt-spec-button-shape-next__button-text-content"
+  ];
+  var CHECK_EVERY_MS = 1500;
+  var counts = /* @__PURE__ */ new Map();
+  var missingButtonLogged = null;
+  function formatCount(count, locale = pageLocale()) {
+    return new Intl.NumberFormat(locale, {
+      notation: "compact",
+      maximumFractionDigits: 1
+    }).format(count);
+  }
+  function pageLocale() {
+    try {
+      return Intl.getCanonicalLocales(document.documentElement.lang || "en")[0];
+    } catch {
+      return "en";
+    }
+  }
+  function dislikesFrom(data) {
+    const dislikes = data?.dislikes;
+    return Number.isSafeInteger(dislikes) && dislikes >= 0 ? dislikes : null;
+  }
+  async function fetchDislikes(videoId) {
+    setBounded(counts, videoId, null, 20);
+    try {
+      const response = await fetch(API + encodeURIComponent(videoId), {
+        credentials: "omit"
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const dislikes = dislikesFrom(await response.json());
+      setBounded(counts, videoId, dislikes, 20);
+      log("dislikes:", videoId, dislikes ?? "none in the response");
+    } catch (error) {
+      log("dislikes: request failed:", error?.message || String(error));
+    }
+  }
+  function visibleDislikeButton() {
+    for (const button of document.querySelectorAll(DISLIKE_BUTTON)) {
+      const { width, height } = button.getBoundingClientRect();
+      if (width > 0 && height > 0) return button;
+    }
+    return null;
+  }
+  function setTextLayout(button, withText) {
+    for (const [iconOnly, iconAndText] of BUTTON_CLASSES)
+      if (button.classList.contains(withText ? iconOnly : iconAndText))
+        button.classList.replace(
+          withText ? iconOnly : iconAndText,
+          withText ? iconAndText : iconOnly
+        );
+    button.toggleAttribute(CHANGED_BUTTON, withText);
+  }
+  function removeCounts() {
+    document.querySelectorAll(`.${COUNT_CLASS}`).forEach((element) => element.remove());
+    document.querySelectorAll(`[${CHANGED_BUTTON}]`).forEach((button) => setTextLayout(button, false));
+  }
+  function update() {
+    const videoId = location.pathname === "/watch" ? currentVideoId() : null;
+    if (!settings.showDislikes || !videoId) {
+      removeCounts();
+      return;
+    }
+    if (!counts.has(videoId)) fetchDislikes(videoId);
+    const dislikes = counts.get(videoId);
+    if (dislikes == null) return;
+    const button = visibleDislikeButton();
+    if (!button) {
+      if (missingButtonLogged !== videoId && document.querySelector("like-button-view-model, #segmented-like-button")) {
+        missingButtonLogged = videoId;
+        log("dislikes: YouTube's dislike button wasn't found");
+      }
+      return;
+    }
+    let count = button.querySelector(`.${COUNT_CLASS}`);
+    if (!count) {
+      removeCounts();
+      count = document.createElement("div");
+      count.classList.add(COUNT_CLASS, ...TEXT_CLASSES);
+      const icon = button.querySelector(
+        '[class*="ShapeNextIcon"], [class*="shape-next__icon"]'
+      );
+      if (icon) icon.after(count);
+      else button.appendChild(count);
+    }
+    setTextLayout(button, true);
+    const text = formatCount(dislikes);
+    if (count.textContent !== text) count.textContent = text;
+    count.title = `${new Intl.NumberFormat(pageLocale()).format(dislikes)} dislikes, estimated by Return YouTube Dislike`;
+  }
+  function refreshDislikes() {
+    update();
+  }
+  function setupDislikes() {
+    if (window.top !== window || location.hostname !== "www.youtube.com") return;
+    setInterval(update, CHECK_EVERY_MS);
+    document.addEventListener("yt-navigate-finish", update);
+    update();
+  }
+
   // src/content/hide-guard.js
   var SHORTS_MARK = "data-spelare-hidden-shorts";
   var MARK_DELAY_MS = 250;
@@ -962,11 +1410,11 @@
       target.setAttribute(SHORTS_MARK, "");
     }
   }
-  function currentVideoId() {
+  function currentVideoId2() {
     return new URLSearchParams(location.search).get("v");
   }
   function isRecommendationLink(link) {
-    return link.querySelector(THUMBNAIL) !== null && new URL(link.href).searchParams.get("v") !== currentVideoId() && !link.closest(
+    return link.querySelector(THUMBNAIL) !== null && new URL(link.href).searchParams.get("v") !== currentVideoId2() && !link.closest(
       "#movie_player, #playlist, #chat, #description, #comments, #guide, ytd-playlist-panel-renderer"
     );
   }
@@ -981,7 +1429,7 @@
     hideEndScreens: () => Array.from(
       document.querySelectorAll('#movie_player a[href*="watch?v="]')
     ).filter(
-      (link) => new URL(link.href).searchParams.get("v") !== currentVideoId() && !link.closest(".ytp-autonav-endscreen")
+      (link) => new URL(link.href).searchParams.get("v") !== currentVideoId2() && !link.closest(".ytp-autonav-endscreen")
     )
   };
   function detectMisses() {
@@ -1033,8 +1481,8 @@
     hideRecommendations: "data-spelare-hide-recommendations"
   };
   function applyHideSettings(root = document.documentElement) {
-    for (const [name, attribute] of Object.entries(HIDE_ATTRIBUTES))
-      root.toggleAttribute(attribute, settings[name] === true);
+    for (const [name, attribute2] of Object.entries(HIDE_ATTRIBUTES))
+      root.toggleAttribute(attribute2, settings[name] === true);
     scheduleHideGuard();
   }
 
@@ -1172,6 +1620,7 @@
     listenForSettingChanges((name) => {
       if (name === "showToolbar") applyToolbarVisibility();
       else if (name === "evenLoudness") applyVolume();
+      else if (name === "showDislikes") refreshDislikes();
       else if (Object.hasOwn(HIDE_ATTRIBUTES, name)) applyHideSettings();
       else if (name === "translationLanguage") {
         const video = spelareVideo();
@@ -1290,52 +1739,6 @@
     setTimeout(() => notice.remove(), NOTICE_MS + 400);
   }
 
-  // src/content/url.js
-  var initialHref = null;
-  try {
-    initialHref = location.href;
-  } catch {
-  }
-  function startTimeFromNavigation() {
-    const startTime = parseStartTime(location);
-    if (startTime >= 0) return startTime;
-    const navigationURL = navigationEntryURL();
-    return videoIdFromURL(navigationURL) && videoIdFromURL(navigationURL) === currentVideoId2() ? parseStartTime(navigationURL) : -1;
-  }
-  function navigationEntryURL() {
-    try {
-      const entry = performance.getEntriesByType("navigation")[0];
-      if (entry?.name) return new URL(entry.name, location.href);
-    } catch {
-    }
-    return new URL(initialHref || location.href);
-  }
-  function parseStartTime(url) {
-    const params = new URLSearchParams(url.search);
-    const value = params.get("t") ?? params.get("start");
-    if (value === null) return -1;
-    if (/^\d+$/.test(value)) return parseInt(value);
-    const hms = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
-    if (!hms || value === "") return -1;
-    const [hours, minutes, seconds] = hms.slice(1).map((part) => Number(part ?? 0));
-    return hours * 3600 + minutes * 60 + seconds;
-  }
-  function videoIdFromURL(url) {
-    if (url.pathname !== "/watch") return void 0;
-    const videoId = new URLSearchParams(url.search).get("v");
-    return isValidVideoId(videoId) ? videoId : void 0;
-  }
-  function currentVideoId2() {
-    const videoId = videoIdFromURL(location);
-    if (videoId || location.pathname !== "/watch") return videoId;
-    const canonicalHref = document.querySelector('link[rel="canonical"]')?.href;
-    if (canonicalHref)
-      try {
-        return videoIdFromURL(new URL(canonicalHref, location.href));
-      } catch {
-      }
-  }
-
   // src/shared/poll.js
   async function pollFor(probe, { attempts, intervalMs, isCurrent = () => true }) {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -1362,7 +1765,7 @@
     showFallbackNotice("Fallback", notice);
     reportPlayerState("fallback");
     callPlayer("fallBack", {
-      videoId: currentVideoId2(),
+      videoId: currentVideoId(),
       startTime,
       quality: youtubeQualityName(settings.quality)
     });
@@ -1402,117 +1805,6 @@
       releaseVideo: false,
       notice
     });
-  }
-
-  // src/content/playlist.js
-  function describePlaylist(dataURL) {
-    if (!dataURL) return "no playable variant";
-    const playlistLines = atob(dataURL.split(",")[1]).split("\n");
-    const heightsByCodec = {};
-    for (let line of playlistLines) {
-      if (!line.startsWith("#EXT-X-STREAM-INF")) continue;
-      const codec = line.match(/CODECS="([^".,]+)/)?.[1] ?? "unknown";
-      const height = Number(line.match(/RESOLUTION=\d+x(\d+)/)?.[1]);
-      if (height) (heightsByCodec[codec] ??= []).push(height);
-    }
-    const ranges = Object.entries(heightsByCodec).map(
-      ([codec, heights]) => `${codec} ${Math.min(...heights)}p–${Math.max(...heights)}p`
-    );
-    const audioCount = playlistLines.filter(
-      (line) => line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO")
-    ).length;
-    return `${ranges.join(", ")}; ${audioCount} audio renditions`;
-  }
-  function rewritePlaylist(lines, width) {
-    let hasVariant = false;
-    let includeNextLine = false;
-    const output = [];
-    const hasOriginalAudio = lines.some(
-      (line) => line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO") && audioKind(line) === "original"
-    );
-    const resolutionsWithOriginal = new Set(
-      lines.flatMap((line) => {
-        if (!line.startsWith("#EXT-X-STREAM-INF") || audioKind(line) !== "original")
-          return [];
-        const resolution = resolutionOf(line);
-        return resolution ? [resolution] : [];
-      })
-    );
-    for (let line of lines)
-      if (includeNextLine) {
-        includeNextLine = false;
-        output.push(line);
-      } else if (line.startsWith("#EXTM3U") || line.startsWith("#EXT-X-INDEPENDENT-SEGMENTS"))
-        output.push(line);
-      else if (line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO") && isAllowedRendition(line, hasOriginalAudio))
-        output.push(line);
-      else if (void 0 === width && line.includes("RESOLUTION=") || line.includes(`RESOLUTION=${width}x`)) {
-        if (!isAllowedRendition(
-          line,
-          resolutionsWithOriginal.has(resolutionOf(line))
-        ))
-          continue;
-        const parts = line.split("SUBTITLES=");
-        const beforeSubtitles = parts[0];
-        includeNextLine = true;
-        hasVariant = true;
-        if (parts.length > 1)
-          output.push(`${beforeSubtitles}CLOSED-CAPTIONS=NONE`);
-        else output.push(beforeSubtitles);
-      }
-    if (hasVariant) {
-      const playlist = output.join("\n");
-      return `data:application/vnd.apple.mpegURL;base64,${btoa(encodeURIComponent(playlist).replace(/%([0-9A-F]{2})/g, (_match, hex) => String.fromCharCode("0x" + hex)))}`;
-    }
-    return false;
-  }
-  function pickAudioRendition(lines) {
-    const renditions = [];
-    for (let line of lines)
-      if (line.startsWith("#EXT-X-MEDIA") && line.includes("TYPE=AUDIO")) {
-        const uri = line.match(/URI="(.+?)"/)?.[1];
-        if (uri)
-          renditions.push({
-            default: line.includes("DEFAULT=YES"),
-            highQuality: /\/itag\/234(?:\/|$)/.test(uri),
-            kind: audioKind(`${line} ${uri}`),
-            url: uri
-          });
-      }
-    let candidates = renditions.filter(
-      (rendition) => rendition.kind !== "dubbed"
-    );
-    const originals = candidates.filter(
-      (rendition) => rendition.kind === "original"
-    );
-    if (originals.length > 0) candidates = originals;
-    candidates.sort(
-      (a, b) => Number(b.highQuality) - Number(a.highQuality) || Number(b.default) - Number(a.default)
-    );
-    return candidates[0]?.url;
-  }
-  function isAllowedRendition(line, requireOriginal) {
-    const kind = audioKind(line);
-    return kind !== "dubbed" && (!requireOriginal || kind === "original");
-  }
-  function audioKind(line) {
-    const lower = line.toLowerCase();
-    if (lower.includes("dubbed")) return "dubbed";
-    if (lower.includes("original")) return "original";
-    const xtags = line.match(/YT-EXT-XTAGS="([^"]+)"/)?.[1];
-    if (!xtags) return null;
-    try {
-      let base64 = xtags.replace(/-/g, "+").replace(/_/g, "/");
-      base64 += "=".repeat((4 - base64.length % 4) % 4);
-      const decoded = atob(base64).toLowerCase();
-      if (decoded.includes("dubbed")) return "dubbed";
-      if (decoded.includes("original")) return "original";
-    } catch {
-    }
-    return null;
-  }
-  function resolutionOf(line) {
-    return line.match(/RESOLUTION=([^,]+)/)?.[1] ?? null;
   }
 
   // src/content/media-session.js
@@ -1777,16 +2069,13 @@
     log("setBasicQuality");
     let hasSelection = false;
     let selectedURL = null;
-    const lines = videoState.playlistContent.split("\n");
-    videoState.streams = {};
-    videoState.streams.auto = rewritePlaylist(lines);
+    videoState.audioLanguage = null;
+    videoState.originalAudioURL = audioURL;
+    videoState.dubMaster = audioStreamEntry(videoState.videoId).master;
+    buildStreams();
     log("setBasicQuality:", describePlaylist(videoState.streams.auto));
     videoState.activeQuality = null;
     handleUnplayableStream(video);
-    for (const quality of VIDEO_QUALITIES) {
-      const streamURL = rewritePlaylist(lines, quality.width);
-      if (streamURL) videoState.streams[quality.id] = streamURL;
-    }
     const videoQuality = pickVideoQuality(
       settings.quality,
       Object.keys(videoState.streams)
@@ -1796,9 +2085,8 @@
       videoState.activeQuality = videoQuality;
       hasSelection = true;
     }
-    const audioStreamURL = audioURL || pickAudioRendition(lines);
+    const audioStreamURL = videoState.streams.audio;
     if (audioStreamURL) {
-      videoState.streams.audio = audioStreamURL;
       if (!(settings.quality !== "audio" || hasSelection)) {
         selectedURL = audioStreamURL;
         videoState.activeQuality = "audio";
@@ -1840,7 +2128,9 @@
         }),
         resolve: resolvePromise,
         started: false,
-        url: null
+        url: null,
+        // The fetched master playlist (offers dubs; see stream-urls.js).
+        master: null
       };
       setBounded(audioStreams, videoId, entry, 8);
     }
@@ -1865,6 +2155,11 @@
       try {
         log("obtainAudioStream:", candidate.videoId);
         const manifest = await fetchManifest(candidate.audioManifestURL, "Audio");
+        entry.master = manifest;
+        if (candidate.videoId === videoState.videoId) {
+          videoState.dubMaster = manifest;
+          addAudioButton();
+        }
         const renditionURI = pickAudioRendition(manifest.split("\n"));
         if (!renditionURI)
           throw new Error("Couldn't find the original-language audio track.");
@@ -1873,8 +2168,11 @@
           throw new Error("Audio stream URL isn't on googlevideo.com.");
         entry.url = streamURL;
         entry.resolve(streamURL);
-        if (candidate.videoId === videoState.videoId)
-          videoState.streams.audio = streamURL;
+        if (candidate.videoId === videoState.videoId) {
+          videoState.originalAudioURL = streamURL;
+          if (videoState.audioLanguage === null)
+            videoState.streams.audio = streamURL;
+        }
       } catch (error) {
         log("obtainAudioStream:", error.message);
         entry.resolve(null);
@@ -2049,7 +2347,7 @@
     if (videoCandidate) obtainVideoStream(videoCandidate);
   }
   function handleURLChange() {
-    const videoId = currentVideoId2() || null;
+    const videoId = currentVideoId() || null;
     if (videoState.videoId !== videoId) {
       log("detectURLChanges:", videoId || "no video");
       videoState.videoId = videoId;
@@ -2057,6 +2355,9 @@
       videoState.response = null;
       videoState.details = null;
       videoState.captionChoice = void 0;
+      videoState.audioLanguage = null;
+      videoState.originalAudioURL = null;
+      videoState.dubMaster = null;
       videoState.playlistContent = null;
       videoState.streams = {};
       removeSpelareVideos();
@@ -2096,6 +2397,7 @@
     ]);
     applyHideSettings();
     setupHideGuard();
+    setupDislikes();
     setupLiveSettings();
     log("handleLinkClicks");
     window.addEventListener(
@@ -2112,7 +2414,7 @@
             if (url.pathname === "/watch") {
               event.stopImmediatePropagation();
               event.preventDefault();
-              if (videoIdFromURL(url) === currentVideoId2()) {
+              if (videoIdFromURL(url) === currentVideoId()) {
                 const startTime = parseStartTime(url);
                 if (startTime >= 0) {
                   const video = document.querySelector(

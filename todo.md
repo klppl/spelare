@@ -43,7 +43,7 @@
   positions Spelare keeps on this device, with a "Resumed at … · Start over" notice.
 - [x] **Volume levelling.** The player response includes each video's loudness; turn loud videos down
   to an even level.
-- [ ] **Audio-language picker.** Dubbed tracks are always filtered out today; let people choose one.
+- [x] **Audio-language picker.** Dubbed tracks are always filtered out today; let people choose one.
 
 ## Cleaner YouTube
 
@@ -53,7 +53,7 @@ Each one a setting in the popup, similar to Unhook.
 - [x] Hide end screens and video cards
 - [x] Hide comments
 - [x] Hide recommendations (watch-page sidebar and home feed)
-- [ ] **Return YouTube Dislike** counts
+- [x] **Return YouTube Dislike** counts (off by default; "Show dislike counts" in the popup)
 
 ## Polish
 

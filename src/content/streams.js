@@ -1,12 +1,8 @@
 import { fetchAndroidPlayerInfo, setupCaptions } from "./captions.js";
 import { fallbackToYouTube, handleExtensionError } from "./fallback.js";
 import { log } from "./log.js";
-import {
-  describePlaylist,
-  pickAudioRendition,
-  rewritePlaylist,
-} from "./playlist.js";
-import { pickVideoQuality, VIDEO_QUALITIES } from "./qualities.js";
+import { describePlaylist, pickAudioRendition } from "./playlist.js";
+import { pickVideoQuality } from "./qualities.js";
 import { settings, videoState } from "./state.js";
 import { isGooglevideoURL } from "../shared/hosts.js";
 import { pollFor } from "../shared/poll.js";
@@ -14,6 +10,8 @@ import { setBounded } from "./bounded-map.js";
 import { setVideoSource, switchVideoSource } from "./source.js";
 import { ownsMediaSession, updateNowPlaying } from "./media-session.js";
 import { setupVideo } from "./video.js";
+import { buildStreams } from "./stream-urls.js";
+import { addAudioButton } from "./toolbar.js";
 import { applyVideoDetails } from "./playback-prefs.js";
 import { reportPlayerState } from "./player-state.js";
 
@@ -21,16 +19,13 @@ export function setupStreams(video, audioURL = null) {
   log("setBasicQuality");
   let hasSelection = false;
   let selectedURL = null;
-  const lines = videoState.playlistContent.split("\n");
-  videoState.streams = {};
-  videoState.streams.auto = rewritePlaylist(lines);
+  videoState.audioLanguage = null;
+  videoState.originalAudioURL = audioURL;
+  videoState.dubMaster = audioStreamEntry(videoState.videoId).master;
+  buildStreams();
   log("setBasicQuality:", describePlaylist(videoState.streams.auto));
   videoState.activeQuality = null;
   handleUnplayableStream(video);
-  for (const quality of VIDEO_QUALITIES) {
-    const streamURL = rewritePlaylist(lines, quality.width);
-    if (streamURL) videoState.streams[quality.id] = streamURL;
-  }
   // activeQuality records what actually plays, so the toolbar doesn't show
   // a quality the video doesn't have.
   const videoQuality = pickVideoQuality(
@@ -42,9 +37,8 @@ export function setupStreams(video, audioURL = null) {
     videoState.activeQuality = videoQuality;
     hasSelection = true;
   }
-  const audioStreamURL = audioURL || pickAudioRendition(lines);
+  const audioStreamURL = videoState.streams.audio;
   if (audioStreamURL) {
-    videoState.streams.audio = audioStreamURL;
     if (!(settings.quality !== "audio" || hasSelection)) {
       selectedURL = audioStreamURL;
       videoState.activeQuality = "audio";
@@ -87,6 +81,8 @@ export function audioStreamEntry(videoId) {
       resolve: resolvePromise,
       started: false,
       url: null,
+      // The fetched master playlist (offers dubs; see stream-urls.js).
+      master: null,
     };
     setBounded(audioStreams, videoId, entry, 8);
   }
@@ -114,6 +110,11 @@ export async function obtainAudioStream(candidate) {
     try {
       log("obtainAudioStream:", candidate.videoId);
       const manifest = await fetchManifest(candidate.audioManifestURL, "Audio");
+      entry.master = manifest;
+      if (candidate.videoId === videoState.videoId) {
+        videoState.dubMaster = manifest;
+        addAudioButton();
+      }
       const renditionURI = pickAudioRendition(manifest.split("\n"));
       if (!renditionURI)
         throw new Error("Couldn't find the original-language audio track.");
@@ -122,8 +123,11 @@ export async function obtainAudioStream(candidate) {
         throw new Error("Audio stream URL isn't on googlevideo.com.");
       entry.url = streamURL;
       entry.resolve(streamURL);
-      if (candidate.videoId === videoState.videoId)
-        videoState.streams.audio = streamURL;
+      if (candidate.videoId === videoState.videoId) {
+        videoState.originalAudioURL = streamURL;
+        if (videoState.audioLanguage === null)
+          videoState.streams.audio = streamURL;
+      }
     } catch (error) {
       log("obtainAudioStream:", error.message);
       entry.resolve(null);

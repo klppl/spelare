@@ -5,7 +5,9 @@ import {
   pickVideoQuality,
   qualityLabel,
 } from "./qualities.js";
+import { languageName } from "./languages.js";
 import { switchVideoSource } from "./source.js";
+import { availableAudioTracks, buildStreams } from "./stream-urls.js";
 import { reportPlayerState } from "./player-state.js";
 import { settings, videoState } from "./state.js";
 
@@ -33,34 +35,39 @@ export const MENU_QUALITIES = [
   ).reverse(),
   "audio",
 ];
-// Opens the quality menu below the Quality button. Escape, a click anywhere
-// else or the Quality button again closes it without changing anything.
-export function showQualityPicker(video, toolbar) {
-  const picker = document.createElement("div");
-  picker.classList.add("picker");
-  picker.setAttribute("role", "menu");
-  picker.setAttribute("aria-label", "Quality");
-  for (const quality of MENU_QUALITIES) {
-    if (!videoState.streams[quality]) continue;
-    if (quality === "audio" && picker.childElementCount > 0) {
+// Opens a menu below `anchor`, like a macOS pop-up menu: `items` are
+// { id, label, active, separatorBefore }, and picking one calls onPick(id).
+// Escape, a click anywhere else or the anchor again closes it unchanged.
+function openMenu(toolbar, anchor, name, items, onPick) {
+  closeMenu(toolbar);
+  const menu = document.createElement("div");
+  menu.classList.add("picker");
+  menu.setAttribute("role", "menu");
+  menu.setAttribute("aria-label", name);
+  menu.style.setProperty("--spelare-menu-left", `${anchor.offsetLeft}px`);
+  for (const item of items) {
+    if (item.separatorBefore && menu.childElementCount > 0) {
       const separator = document.createElement("div");
       separator.classList.add("separator");
       separator.setAttribute("role", "separator");
-      picker.appendChild(separator);
+      menu.appendChild(separator);
     }
-    picker.appendChild(qualityOption(video, toolbar, quality));
+    const button = makeToolbarButton(item.label, () => {
+      closeMenu(toolbar);
+      onPick(item.id);
+    });
+    button.setAttribute("role", "menuitemradio");
+    button.classList.toggle("active", item.active);
+    button.setAttribute("aria-checked", String(item.active));
+    menu.appendChild(button);
   }
   const dismiss = new AbortController();
-  picker.dismiss = dismiss;
-  const cancel = () =>
-    closeQualityPicker(
-      toolbar,
-      qualityLabel(videoState.activeQuality || settings.quality),
-    );
+  menu.dismiss = dismiss;
+  menu.anchor = anchor;
   document.addEventListener(
     "pointerdown",
     (event) => {
-      if (!toolbar.contains(event.target)) cancel();
+      if (!toolbar.contains(event.target)) closeMenu(toolbar);
     },
     { capture: true, signal: dismiss.signal },
   );
@@ -70,26 +77,109 @@ export function showQualityPicker(video, toolbar) {
       if (event.key !== "Escape") return;
       event.stopImmediatePropagation();
       event.preventDefault();
-      cancel();
+      closeMenu(toolbar);
     },
     { capture: true, signal: dismiss.signal },
   );
-  toolbar.appendChild(picker);
-  toolbar.querySelector(".quality")?.setAttribute("aria-expanded", "true");
+  toolbar.appendChild(menu);
+  fitMenu(toolbar, menu);
+  anchor.setAttribute("aria-expanded", "true");
   toolbar.updateVisibility?.();
 }
-function qualityOption(video, toolbar, quality) {
-  const label = qualityLabel(quality);
-  const button = makeToolbarButton(label, () => {
-    setQuality(video, quality, { save: true });
-    closeQualityPicker(toolbar, label);
-  });
-  button.setAttribute("data-spelare-quality", quality);
-  button.setAttribute("role", "menuitemradio");
-  const active = (videoState.activeQuality || settings.quality) === quality;
-  button.classList.toggle("active", active);
-  button.setAttribute("aria-checked", String(active));
-  return button;
+// Lets a long menu (a video with twenty dubs) use the video's height down to
+// Safari's play bar, and opens it with the playing item in view.
+function fitMenu(toolbar, menu) {
+  const video = toolbar.parentElement?.querySelector(
+    "video[data-spelare-video]",
+  );
+  if (video) {
+    const top = toolbar.offsetTop + toolbar.offsetHeight + 6;
+    const room = video.clientHeight - top - MENU_BOTTOM_MARGIN_PX;
+    menu.style.setProperty(
+      "--spelare-menu-max-height",
+      `${Math.max(room, MENU_MIN_HEIGHT_PX)}px`,
+    );
+  }
+  menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+}
+// Room left below a menu for Safari's play bar, and the least a menu gets.
+const MENU_BOTTOM_MARGIN_PX = 52;
+const MENU_MIN_HEIGHT_PX = 120;
+export function closeMenu(toolbar) {
+  const menu = toolbar.querySelector(".picker");
+  if (!menu) return;
+  menu.dismiss.abort();
+  menu.anchor.setAttribute("aria-expanded", "false");
+  menu.remove();
+  toolbar.updateVisibility?.();
+}
+// Opens `anchor`'s menu, or closes it if it's the one open.
+function toggleMenu(toolbar, anchor, open) {
+  if (toolbar.querySelector(".picker")?.anchor === anchor) closeMenu(toolbar);
+  else open();
+}
+export function showQualityPicker(video, toolbar, anchor) {
+  const current = videoState.activeQuality || settings.quality;
+  const items = MENU_QUALITIES.filter(
+    (quality) => videoState.streams[quality],
+  ).map((quality) => ({
+    id: quality,
+    label: qualityLabel(quality),
+    active: quality === current,
+    separatorBefore: quality === "audio",
+  }));
+  openMenu(toolbar, anchor, "Quality", items, (quality) =>
+    setQuality(video, quality, { save: true }),
+  );
+}
+// The Audio button's label: "Original", or the dub's language.
+export function audioLanguageLabel(language) {
+  return language === null ? "Original" : languageLabel(language);
+}
+function languageLabel(code) {
+  const name = languageName(code);
+  return name === "System" ? code : name;
+}
+// The Audio menu: the original (with its language when known), then each
+// dub, by name.
+export function audioMenuItems({ original, dubs }, current) {
+  return [
+    {
+      id: null,
+      label: original ? `Original (${languageLabel(original)})` : "Original",
+      active: current === null,
+      separatorBefore: false,
+    },
+    ...dubs
+      .map((language) => ({
+        id: language,
+        label: languageLabel(language),
+        active: current === language,
+        separatorBefore: false,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  ].map((item, index) => ({ ...item, separatorBefore: index === 1 }));
+}
+// Plays the video with `language`'s dub (null: the original audio), keeping
+// the quality (or the closest the dub has) and the position.
+export function setAudioLanguage(video, language) {
+  if (language === videoState.audioLanguage) return;
+  log("setAudioLanguage:", language ?? "original");
+  videoState.audioLanguage = language;
+  buildStreams();
+  const quality =
+    videoState.activeQuality === "audio" && videoState.streams.audio
+      ? "audio"
+      : playableQuality(videoState.activeQuality ?? "auto");
+  if (!quality) return;
+  videoState.activeQuality = quality;
+  switchVideoSource(video, videoState.streams[quality]);
+  const toolbar = document.querySelector("#spelare-toolbar");
+  const qualityButton = toolbar?.querySelector(".controls .quality");
+  if (qualityButton) qualityButton.textContent = qualityLabel(quality);
+  const audioButton = toolbar?.querySelector(".controls .audio-language");
+  if (audioButton) audioButton.textContent = audioLanguageLabel(language);
+  reportPlayerState("spelare");
 }
 // The quality this video can play for `wanted`: that one, else the best one
 // below it, else Auto. Null when Spelare isn't playing it (fallback).
@@ -143,15 +233,6 @@ export function setQuality(video, quality, { save = false } = {}) {
   if (button) button.textContent = qualityLabel(quality);
   reportPlayerState("spelare");
   return true;
-}
-export function closeQualityPicker(toolbar, label) {
-  const picker = toolbar.querySelector(".picker");
-  picker?.dismiss?.abort();
-  picker?.remove();
-  const qualityButton = toolbar.querySelector(".quality");
-  qualityButton.textContent = label;
-  qualityButton.setAttribute("aria-expanded", "false");
-  toolbar.updateVisibility?.();
 }
 // Whether YouTube's watch page is in theater mode.
 function isTheaterMode() {
@@ -229,11 +310,10 @@ export function createToolbar(video) {
   toolbar.appendChild(controls);
   const qualityButton = makeToolbarButton(
     qualityLabel(videoState.activeQuality || settings.quality),
-    () => {
-      if (toolbar.querySelector(".picker"))
-        closeQualityPicker(toolbar, qualityButton.textContent);
-      else showQualityPicker(video, toolbar);
-    },
+    () =>
+      toggleMenu(toolbar, qualityButton, () =>
+        showQualityPicker(video, toolbar, qualityButton),
+      ),
     "quality",
   );
   qualityButton.title = "Quality (Q / Shift-Q)";
@@ -250,6 +330,37 @@ export function createToolbar(video) {
   trackTheaterMode(theaterButton);
   toolbar.updateVisibility = autoHide(toolbar, video);
   video.closest("div").insertBefore(toolbar, video);
+  addAudioButton();
+}
+// Adds the Audio button (after Quality) once the video is known to have
+// dubs, which may be after the controls were created. Videos without dubs
+// get none.
+export function addAudioButton() {
+  const toolbar = document.querySelector("#spelare-toolbar");
+  const video = document.querySelector(
+    "video[data-spelare-video]:not([data-spelare-fallback])",
+  );
+  if (!toolbar || !video || toolbar.querySelector(".audio-language")) return;
+  const tracks = availableAudioTracks();
+  if (tracks.dubs.length === 0) return;
+  const audioButton = makeToolbarButton(
+    audioLanguageLabel(videoState.audioLanguage),
+    () =>
+      toggleMenu(toolbar, audioButton, () =>
+        openMenu(
+          toolbar,
+          audioButton,
+          "Audio",
+          audioMenuItems(tracks, videoState.audioLanguage),
+          (language) => setAudioLanguage(video, language),
+        ),
+      ),
+    "audio-language",
+  );
+  audioButton.title = "Audio language";
+  audioButton.setAttribute("aria-haspopup", "menu");
+  audioButton.setAttribute("aria-expanded", "false");
+  toolbar.querySelector(".controls .quality").after(audioButton);
 }
 // "Show quality buttons" off hides the controls in every layout.
 export function applyToolbarVisibility() {

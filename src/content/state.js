@@ -12,6 +12,9 @@ const STORED_SETTINGS = {
   showToolbar: { key: "showToolbar", fallback: true },
   // Turn loud videos down to YouTube's target level (playback-prefs.js).
   evenLoudness: { key: "evenLoudness", fallback: true },
+  // Dislike counts from Return YouTube Dislike (dislikes.js); off by default
+  // because it sends each watched video's id to that service.
+  showDislikes: { key: "showDislikes", fallback: false },
   // Reopen videos where they were left (resume.js).
   resumePlayback: { key: "resumePlayback", fallback: true },
   captionsOnByDefault: { key: "showCaption", fallback: false },
@@ -38,6 +41,13 @@ export const videoState = {
   videoId: null,
   // Title and channel for Now Playing, once the player response has them.
   details: null,
+  // The dub picked from the Audio menu (a language code), or null for the
+  // original audio; and the original audio-only stream (stream-urls.js).
+  audioLanguage: null,
+  originalAudioURL: null,
+  // The visionOS master playlist, which lists dubs when the played one
+  // doesn't (stream-urls.js).
+  dubMaster: null,
   // The caption track chosen for this video: undefined until the default or
   // the user picks one, null for off, else a track label (see captions.js).
   captionChoice: undefined,

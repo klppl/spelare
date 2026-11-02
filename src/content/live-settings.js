@@ -2,6 +2,7 @@
 // setting changes arrive through storage, and the popup asks the tab it's
 // over to play a newly picked default quality now.
 import { setupCaptions } from "./captions.js";
+import { refreshDislikes } from "./dislikes.js";
 import { applyHideSettings, HIDE_ATTRIBUTES } from "./page-cleanup.js";
 import { applyVolume } from "./playback-prefs.js";
 import { listenForSettingChanges } from "./state.js";
@@ -33,6 +34,7 @@ export function setupLiveSettings() {
   listenForSettingChanges((name) => {
     if (name === "showToolbar") applyToolbarVisibility();
     else if (name === "evenLoudness") applyVolume();
+    else if (name === "showDislikes") refreshDislikes();
     else if (Object.hasOwn(HIDE_ATTRIBUTES, name)) applyHideSettings();
     else if (name === "translationLanguage") {
       const video = spelareVideo();

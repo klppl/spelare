@@ -53,6 +53,9 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
    no "pageObserver: did not start", and the video fills the player (also after resizing the window).
 2. Quality picker: switch to 720p, then Auto, then Sound only; position and play state are kept.
    Theater turns theater mode on and off (so does `t`), and the button is filled while it's on.
+   On a video with dubbed audio, an Audio button appears: picking a language switches the soundtrack
+   and keeps the position and quality (or the closest one the dub has); Original goes back. Videos
+   without dubs show no Audio button.
    Double-clicking the picture toggles full screen; double-clicking Safari's own buttons or play bar
    doesn't. The Spelare button in Safari's toolbar shows the playing quality (`1080`, `4K`, `Auto`, `♪`),
    `!` when YouTube's player took over, and nothing on pages without a video; hovering it says which.
@@ -79,10 +82,12 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
 10. Fallback: when a stream fails, the toolbar shows "… (Fallback)" and YouTube's own player plays; clicking it
     explains why (refused stream, or no stream found).
 11. Popup "Show diagnostic log" lists the log for the session above as plain text, with no errors.
-12. Popup "Hide": each checkbox applies at once, without a reload. Shorts shelves and Shorts in results,
+12. Popup "Show dislike counts": a number appears in YouTube's dislike button on watch pages (and
+    follows navigation); unticking removes it at once.
+13. Popup "Hide": each checkbox applies at once, without a reload. Shorts shelves and Shorts in results,
     the related videos next to a video, the home feed, comments, and end-screen tiles disappear; unticking
     brings them back. Playlists and live chat stay in the sidebar. Afterwards the diagnostic log has no
     `hideRules:` lines; each one names elements a rule in `mac.css` missed (`rule missed`), or Shorts that
     were only caught by their links (`hidden by link instead`), so a selector needs adding.
-13. Popup: Japanese auto-translate (`ja`) produces a translated track; a setting saved as Japanese or 4320p by an
+14. Popup: Japanese auto-translate (`ja`) produces a translated track; a setting saved as Japanese or 4320p by an
     older version shows as Japanese / Auto.

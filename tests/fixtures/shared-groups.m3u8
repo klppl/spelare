@@ -1,0 +1,16 @@
+#EXTM3U
+#EXT-X-INDEPENDENT-SEGMENTS
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/itag/233/lang/es/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="233",LANGUAGE="es",NAME="Español - dubbed",YT-EXT-XTAGS="Cg8KBWFjb250EgZkdWJiZWQKCgoEbGFuZxICZXM",YT-EXT-AUDIO-CONTENT-ID="es.3",YT-EXT-ABSOLUTE-LOUDNESS=-14.000,DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/itag/233/lang/fr/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="233",LANGUAGE="fr",NAME="Français - dubbed",YT-EXT-XTAGS="Cg8KBWFjb250EgZkdWJiZWQKCgoEbGFuZxICZnI",YT-EXT-AUDIO-CONTENT-ID="fr.3",YT-EXT-ABSOLUTE-LOUDNESS=-14.000,DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/itag/233/lang/en/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="233",LANGUAGE="en",NAME="English - original",YT-EXT-XTAGS="ChEKBWFjb250EghvcmlnaW5hbAoKCgRsYW5nEgJlbg",YT-EXT-AUDIO-CONTENT-ID="en.4",YT-EXT-ABSOLUTE-LOUDNESS=-6.670,DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/itag/234/lang/es/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="234",LANGUAGE="es",NAME="Español - dubbed",YT-EXT-XTAGS="Cg8KBWFjb250EgZkdWJiZWQKCgoEbGFuZxICZXM",YT-EXT-AUDIO-CONTENT-ID="es.3",YT-EXT-ABSOLUTE-LOUDNESS=-14.000,DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/itag/234/lang/fr/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="234",LANGUAGE="fr",NAME="Français - dubbed",YT-EXT-XTAGS="Cg8KBWFjb250EgZkdWJiZWQKCgoEbGFuZxICZnI",YT-EXT-AUDIO-CONTENT-ID="fr.3",YT-EXT-ABSOLUTE-LOUDNESS=-14.000,DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-MEDIA:URI="https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/itag/234/lang/en/playlist/index.m3u8",TYPE=AUDIO,GROUP-ID="234",LANGUAGE="en",NAME="English - original",YT-EXT-XTAGS="ChEKBWFjb250EghvcmlnaW5hbAoKCgRsYW5nEgJlbg",YT-EXT-AUDIO-CONTENT-ID="en.4",YT-EXT-ABSOLUTE-LOUDNESS=-6.670,DEFAULT=NO,AUTOSELECT=YES
+#EXT-X-STREAM-INF:BANDWIDTH=804622,CODECS="avc1.4D401E,mp4a.40.2",RESOLUTION=640x360,FRAME-RATE=30,VIDEO-RANGE=SDR,YT-EXT-ABSOLUTE-LOUDNESS=-6.670,AUDIO="234",CLOSED-CAPTIONS=NONE
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/variant/1/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2568784,CODECS="avc1.4D401F,mp4a.40.2",RESOLUTION=1280x720,FRAME-RATE=30,VIDEO-RANGE=SDR,YT-EXT-ABSOLUTE-LOUDNESS=-6.670,AUDIO="234",CLOSED-CAPTIONS=NONE
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/variant/2/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=4699635,CODECS="avc1.640028,mp4a.40.2",RESOLUTION=1920x1080,FRAME-RATE=30,VIDEO-RANGE=SDR,YT-EXT-ABSOLUTE-LOUDNESS=-6.670,AUDIO="234",CLOSED-CAPTIONS=NONE
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/variant/3/playlist/index.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=632927,CODECS="vp09.00.21.08,mp4a.40.2",RESOLUTION=640x360,FRAME-RATE=30,VIDEO-RANGE=SDR,YT-EXT-ABSOLUTE-LOUDNESS=-6.670,AUDIO="234",CLOSED-CAPTIONS=NONE
+https://manifest.googlevideo.com/api/manifest/hls_playlist/id/real/variant/4/playlist/index.m3u8
