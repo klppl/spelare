@@ -1,4 +1,5 @@
 import { setupCaptions } from "./captions.js";
+import { setupBackgroundPlayback } from "./background-playback.js";
 import { trackFrameDuration } from "./frame-rate.js";
 import { setupPlaybackPrefs } from "./playback-prefs.js";
 import { log } from "./log.js";
@@ -37,6 +38,7 @@ export function setupVideo(video) {
   setupMediaSession(video);
   setupDoubleClickFullscreen(video);
   trackPosition(video, videoState.videoId);
+  setupBackgroundPlayback(video);
   reportPlayerState("spelare");
 }
 export function syncHiddenPlayerProgress(video) {

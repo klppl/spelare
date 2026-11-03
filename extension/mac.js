@@ -2012,6 +2012,54 @@
       navigator.mediaSession.setActionHandler(action, handler);
   }
 
+  // src/content/background-playback.js
+  var SYSTEM_PAUSE_WINDOW_MS = 1e3;
+  function isIOS(nav = navigator) {
+    return /iPhone|iPad|iPod/.test(nav.userAgent) || /Macintosh/.test(nav.userAgent) && nav.maxTouchPoints > 1;
+  }
+  function inPictureInPicture(video) {
+    return document.pictureInPictureElement === video || video.webkitPresentationMode === "picture-in-picture";
+  }
+  function setupBackgroundPlayback(video, { ios = isIOS() } = {}) {
+    if (!ios) return;
+    let lastPauseAt = -Infinity;
+    let hiddenFrom = null;
+    video.addEventListener("pause", () => {
+      lastPauseAt = performance.now();
+    });
+    window.addEventListener(
+      "visibilitychange",
+      () => {
+        if (!video.isConnected) return;
+        if (document.hidden) {
+          const playing = !video.paused || performance.now() - lastPauseAt < SYSTEM_PAUSE_WINDOW_MS;
+          const quality = videoState.activeQuality;
+          log("backgroundPlayback: hidden", { paused: video.paused, quality });
+          if (!playing || quality === "audio" || !videoState.streams.audio || inPictureInPicture(video))
+            return;
+          log("backgroundPlayback: sound only while hidden, from", quality);
+          hiddenFrom = quality;
+          switchTo(video, "audio");
+        } else if (hiddenFrom) {
+          const quality = hiddenFrom;
+          hiddenFrom = null;
+          if (videoState.activeQuality !== "audio" || !videoState.streams[quality])
+            return;
+          log("backgroundPlayback: back to", quality);
+          switchTo(video, quality, { resume: !video.paused });
+        }
+      },
+      true
+    );
+  }
+  function switchTo(video, quality, { resume = true } = {}) {
+    videoState.activeQuality = quality;
+    switchVideoSource(video, videoState.streams[quality], { pauseFirst: false });
+    if (resume)
+      video.play().catch((error) => log("backgroundPlayback:", error.message));
+    reportPlayerState("spelare");
+  }
+
   // src/content/recovery.js
   var MAX_CLOCK_JUMP_SECONDS = 2;
   var STALL_TIMEOUT_MS = 1500;
@@ -2174,6 +2222,7 @@
     setupMediaSession(video);
     setupDoubleClickFullscreen(video);
     trackPosition(video, videoState.videoId);
+    setupBackgroundPlayback(video);
     reportPlayerState("spelare");
   }
   function syncHiddenPlayerProgress(video) {
