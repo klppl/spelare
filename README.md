@@ -1,5 +1,7 @@
 # Spelare
 
+<a href="LICENSE"><img src="design/license-lagom.svg" alt="License: Lagom" height="28"></a>
+
 Spelare is a Safari web extension that plays YouTube videos directly in Safari's native `<video>` player using YouTube's native HLS streams.
 
 <p>
@@ -79,3 +81,11 @@ Open `xcode/SpelareDev/SpelareDev.xcodeproj` in Xcode to build and run the devel
 ### Releasing
 
 Releases are Developer ID signed, notarized DMGs on GitHub with Sparkle updates. See [RELEASING.md](RELEASING.md).
+
+---
+
+## License
+
+Spelare is released under the [Lagom License](LICENSE): use it, change it and share it as you like, as
+long as you keep the copyright notice and the license. The bundled challenge solver in `src/page/vendor/`
+keeps its own licenses, listed in its header.
