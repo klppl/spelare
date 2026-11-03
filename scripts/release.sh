@@ -152,6 +152,19 @@ if [[ $PUBLISH == 1 ]]; then
         --repo "$RELEASES_REPO" --title "$DMG_NAME $VERSION" "${NOTES_ARGS[@]}" "${TARGET_ARGS[@]}"
 fi
 
+# Building registered the exported app and Xcode's archive working copy with
+# LaunchServices, and Safari would take their extension for the installed one
+# (and break once they're gone), so they're unregistered and removed.
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+STRAY_DIRS=("$OUT/export")
+for DIR in "$HOME"/Library/Developer/Xcode/DerivedData/SpelareDev-*/Build/Intermediates.noindex/ArchiveIntermediates; do
+    [[ -d "$DIR" ]] && STRAY_DIRS+=("$DIR")
+done
+for DIR in "${STRAY_DIRS[@]}"; do
+    find "$DIR" -maxdepth 6 -name '*.app' -prune -exec "$LSREGISTER" -u {} \; 2>/dev/null || true
+    rm -rf "$DIR"
+done
+
 step "Done"
 echo "DMG:     $DMG"
 echo "Appcast: $OUT/appcast.xml"
