@@ -103,7 +103,8 @@ export function openMenu(toolbar, anchor, name, items, onPick) {
   document.addEventListener(
     "pointerdown",
     (event) => {
-      if (!toolbar.contains(event.target)) closeMenu(toolbar);
+      if (!toolbar.contains(event.target) && !menu.contains(event.target))
+        closeMenu(toolbar);
     },
     { capture: true, signal: dismiss.signal },
   );
@@ -117,7 +118,13 @@ export function openMenu(toolbar, anchor, name, items, onPick) {
     },
     { capture: true, signal: dismiss.signal },
   );
-  toolbar.appendChild(menu);
+  if (matchMedia("(hover: none)").matches) {
+    menuLayer ??= document.createElement("div");
+    menuLayer.id = "spelare-menu-layer";
+    if (!menuLayer.isConnected) document.documentElement.appendChild(menuLayer);
+    menuLayer.appendChild(menu);
+    toolbar.floatingMenu = menu;
+  } else toolbar.appendChild(menu);
   fitMenu(toolbar, menu);
   anchor.setAttribute("aria-expanded", "true");
   toolbar.updateVisibility?.();
@@ -125,12 +132,25 @@ export function openMenu(toolbar, anchor, name, items, onPick) {
 // Lets a long menu (a video with twenty dubs) use the video's height down to
 // Safari's play bar, keeps it inside the window (on a phone the Settings
 // menu would run off the right edge), and opens it with the playing item in
-// view.
+// view. In the touch-screen layer it gets the screen's height instead.
 function fitMenu(toolbar, menu) {
   const video = toolbar.parentElement?.querySelector(
     "video[data-spelare-video]",
   );
-  if (video) {
+  if (menu.parentElement === menuLayer) {
+    const toolbarBox = toolbar.getBoundingClientRect();
+    const top = toolbarBox.bottom + 6;
+    menu.style.setProperty("--spelare-menu-top", `${top}px`);
+    menu.style.setProperty(
+      "--spelare-menu-left",
+      `${toolbarBox.left + parseFloat(menuLeft(menu))}px`,
+    );
+    const viewportHeight = window.visualViewport?.height ?? innerHeight;
+    menu.style.setProperty(
+      "--spelare-menu-max-height",
+      `${Math.max(viewportHeight - top - MENU_EDGE_MARGIN_PX, MENU_MIN_HEIGHT_PX)}px`,
+    );
+  } else if (video) {
     const top = toolbar.offsetTop + toolbar.offsetHeight + 6;
     const room = video.clientHeight - top - MENU_BOTTOM_MARGIN_PX;
     menu.style.setProperty(
@@ -141,19 +161,33 @@ function fitMenu(toolbar, menu) {
   const overflow =
     menu.getBoundingClientRect().right -
     (document.documentElement.clientWidth - MENU_EDGE_MARGIN_PX);
-  if (overflow > 0) {
-    const left = parseFloat(menu.style.getPropertyValue("--spelare-menu-left"));
-    menu.style.setProperty("--spelare-menu-left", `${left - overflow}px`);
-  }
-  menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+  if (overflow > 0)
+    menu.style.setProperty(
+      "--spelare-menu-left",
+      `${parseFloat(menuLeft(menu)) - overflow}px`,
+    );
+  // Scrolls the menu only: scrollIntoView would scroll YouTube's player too.
+  const active = menu.querySelector(".active");
+  if (active && active.offsetTop + active.offsetHeight > menu.clientHeight)
+    menu.scrollTop =
+      active.offsetTop - (menu.clientHeight - active.offsetHeight) / 2;
 }
+const menuLeft = (menu) => menu.style.getPropertyValue("--spelare-menu-left");
 const MENU_EDGE_MARGIN_PX = 8;
 // Room left below a menu for Safari's play bar, and the least a menu gets.
 const MENU_BOTTOM_MARGIN_PX = 52;
 const MENU_MIN_HEIGHT_PX = 120;
+// On touch screens a menu opens outside the player, which cuts off anything
+// below a short video (a phone held upright): in a layer over the page.
+let menuLayer = null;
+// The toolbar's open menu, in the toolbar or in the touch-screen layer.
+function openMenuOf(toolbar) {
+  return toolbar.querySelector(".picker") ?? toolbar.floatingMenu ?? null;
+}
 export function closeMenu(toolbar) {
-  const menu = toolbar.querySelector(".picker");
+  const menu = openMenuOf(toolbar);
   if (!menu) return;
+  toolbar.floatingMenu = null;
   menu.dismiss.abort();
   menu.anchor.setAttribute("aria-expanded", "false");
   menu.remove();
@@ -161,7 +195,7 @@ export function closeMenu(toolbar) {
 }
 // Opens `anchor`'s menu, or closes it if it's the one open.
 export function toggleMenu(toolbar, anchor, open) {
-  if (toolbar.querySelector(".picker")?.anchor === anchor) closeMenu(toolbar);
+  if (openMenuOf(toolbar)?.anchor === anchor) closeMenu(toolbar);
   else open();
 }
 // The Settings menu: Quality, then Audio for videos with dubs. Ids are
@@ -331,7 +365,7 @@ function autoHide(toolbar, video) {
       pointerActive ||
       overControls ||
       video.paused ||
-      toolbar.querySelector(".picker") !== null;
+      openMenuOf(toolbar) !== null;
     toolbar.classList.toggle("visible", show);
   };
   const settleAfter = (delay) => {

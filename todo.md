@@ -27,8 +27,9 @@
     `background-playback.js` switches to the sound-only stream while the page is hidden and back when
     it's shown (works on iPhone with the screen locked)
   - [ ] Background playback with Safari in the background (switching apps) instead of locking
-  - [ ] The popup on iPhone opens as a sheet but is too wide: text runs off the right edge
-  - [ ] The capsule's quality menu shows only about four rows on iPhone
+  - [x] The popup on iPhone: a sheet with each section's name above its options, wrapping lines
+  - [x] Menus on touch screens open in a layer over the page, so a short (portrait) video doesn't cut
+    them off
   - [ ] Hide options and dislike counts on the mobile site
   - [ ] iPad (gets the desktop site) and a real device (needs registering in the developer account)
 

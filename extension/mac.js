@@ -693,7 +693,8 @@
     document.addEventListener(
       "pointerdown",
       (event) => {
-        if (!toolbar.contains(event.target)) closeMenu(toolbar);
+        if (!toolbar.contains(event.target) && !menu.contains(event.target))
+          closeMenu(toolbar);
       },
       { capture: true, signal: dismiss.signal }
     );
@@ -707,7 +708,13 @@
       },
       { capture: true, signal: dismiss.signal }
     );
-    toolbar.appendChild(menu);
+    if (matchMedia("(hover: none)").matches) {
+      menuLayer ??= document.createElement("div");
+      menuLayer.id = "spelare-menu-layer";
+      if (!menuLayer.isConnected) document.documentElement.appendChild(menuLayer);
+      menuLayer.appendChild(menu);
+      toolbar.floatingMenu = menu;
+    } else toolbar.appendChild(menu);
     fitMenu(toolbar, menu);
     anchor.setAttribute("aria-expanded", "true");
     toolbar.updateVisibility?.();
@@ -716,7 +723,20 @@
     const video = toolbar.parentElement?.querySelector(
       "video[data-spelare-video]"
     );
-    if (video) {
+    if (menu.parentElement === menuLayer) {
+      const toolbarBox = toolbar.getBoundingClientRect();
+      const top = toolbarBox.bottom + 6;
+      menu.style.setProperty("--spelare-menu-top", `${top}px`);
+      menu.style.setProperty(
+        "--spelare-menu-left",
+        `${toolbarBox.left + parseFloat(menuLeft(menu))}px`
+      );
+      const viewportHeight = window.visualViewport?.height ?? innerHeight;
+      menu.style.setProperty(
+        "--spelare-menu-max-height",
+        `${Math.max(viewportHeight - top - MENU_EDGE_MARGIN_PX, MENU_MIN_HEIGHT_PX)}px`
+      );
+    } else if (video) {
       const top = toolbar.offsetTop + toolbar.offsetHeight + 6;
       const room = video.clientHeight - top - MENU_BOTTOM_MARGIN_PX;
       menu.style.setProperty(
@@ -725,25 +745,34 @@
       );
     }
     const overflow = menu.getBoundingClientRect().right - (document.documentElement.clientWidth - MENU_EDGE_MARGIN_PX);
-    if (overflow > 0) {
-      const left = parseFloat(menu.style.getPropertyValue("--spelare-menu-left"));
-      menu.style.setProperty("--spelare-menu-left", `${left - overflow}px`);
-    }
-    menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
+    if (overflow > 0)
+      menu.style.setProperty(
+        "--spelare-menu-left",
+        `${parseFloat(menuLeft(menu)) - overflow}px`
+      );
+    const active = menu.querySelector(".active");
+    if (active && active.offsetTop + active.offsetHeight > menu.clientHeight)
+      menu.scrollTop = active.offsetTop - (menu.clientHeight - active.offsetHeight) / 2;
   }
+  var menuLeft = (menu) => menu.style.getPropertyValue("--spelare-menu-left");
   var MENU_EDGE_MARGIN_PX = 8;
   var MENU_BOTTOM_MARGIN_PX = 52;
   var MENU_MIN_HEIGHT_PX = 120;
+  var menuLayer = null;
+  function openMenuOf(toolbar) {
+    return toolbar.querySelector(".picker") ?? toolbar.floatingMenu ?? null;
+  }
   function closeMenu(toolbar) {
-    const menu = toolbar.querySelector(".picker");
+    const menu = openMenuOf(toolbar);
     if (!menu) return;
+    toolbar.floatingMenu = null;
     menu.dismiss.abort();
     menu.anchor.setAttribute("aria-expanded", "false");
     menu.remove();
     toolbar.updateVisibility?.();
   }
   function toggleMenu(toolbar, anchor, open) {
-    if (toolbar.querySelector(".picker")?.anchor === anchor) closeMenu(toolbar);
+    if (openMenuOf(toolbar)?.anchor === anchor) closeMenu(toolbar);
     else open();
   }
   function settingsMenuItems(streams, currentQuality, tracks, language) {
@@ -875,7 +904,7 @@
     let overControls = false;
     let idleTimer;
     const update2 = () => {
-      const show = pointerActive || overControls || video.paused || toolbar.querySelector(".picker") !== null;
+      const show = pointerActive || overControls || video.paused || openMenuOf(toolbar) !== null;
       toolbar.classList.toggle("visible", show);
     };
     const settleAfter = (delay) => {

@@ -379,7 +379,7 @@ video::cue(:future) {
 }
 
 #spelare-toolbar .controls,
-#spelare-toolbar .picker {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker {
     all: initial !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -388,7 +388,7 @@ video::cue(:future) {
     pointer-events: none !important;
 }
 
-#spelare-toolbar .button {
+:is(#spelare-toolbar, #spelare-menu-layer) .button {
     all: initial !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -412,20 +412,20 @@ video::cue(:future) {
     -webkit-user-select: none !important;
 }
 
-#spelare-toolbar .button:hover {
+:is(#spelare-toolbar, #spelare-menu-layer) .button:hover {
     background: rgba(60, 60, 64, 0.7) !important;
 }
 
-#spelare-toolbar .button:active {
+:is(#spelare-toolbar, #spelare-menu-layer) .button:active {
     background: rgba(80, 80, 86, 0.75) !important;
 }
 
-#spelare-toolbar .button:focus-visible {
+:is(#spelare-toolbar, #spelare-menu-layer) .button:focus-visible {
     outline: 2px solid #0a84ff !important;
     outline-offset: 2px !important;
 }
 
-#spelare-toolbar .button.active {
+:is(#spelare-toolbar, #spelare-menu-layer) .button.active {
     color: #000 !important;
     background: rgba(255, 255, 255, 0.92) !important;
 }
@@ -452,7 +452,7 @@ video::cue(:future) {
 
 /* The quality menu: drops down below the Quality button, like a macOS
    pop-up menu, with a checkmark on the playing quality. */
-#spelare-toolbar .picker {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker {
     position: absolute !important;
     top: calc(100% + 6px) !important;
     left: var(--spelare-menu-left, 0px) !important;
@@ -474,7 +474,23 @@ video::cue(:future) {
     backdrop-filter: saturate(180%) blur(24px) !important;
 }
 
-#spelare-toolbar .picker .button {
+/* On touch screens a menu opens in a layer over the whole page instead of
+   in the toolbar, since YouTube's player cuts off anything below a short
+   video (fitMenu sets where). */
+#spelare-menu-layer {
+    all: initial !important;
+    position: fixed !important;
+    inset: 0 !important;
+    pointer-events: none !important;
+    z-index: 2147483647 !important;
+}
+
+#spelare-menu-layer .picker {
+    top: var(--spelare-menu-top, 0px) !important;
+    pointer-events: auto !important;
+}
+
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button {
     gap: 8px !important;
     height: 28px !important;
     padding: 0 10px 0 8px !important;
@@ -487,7 +503,7 @@ video::cue(:future) {
 }
 
 /* Room for the checkmark on every item, so the labels line up. */
-#spelare-toolbar .picker .button::before {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button::before {
     content: "" !important;
     display: block !important;
     flex: none !important;
@@ -495,29 +511,29 @@ video::cue(:future) {
     height: 12px !important;
 }
 
-#spelare-toolbar .picker .button.active::before {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button.active::before {
     background-color: currentColor !important;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 6.5 4.8 9.2 10 3'/%3E%3C/svg%3E") center / contain no-repeat !important;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 6.5 4.8 9.2 10 3'/%3E%3C/svg%3E") center / contain no-repeat !important;
 }
 
-#spelare-toolbar .picker .button:hover {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button:hover {
     color: #fff !important;
     background: #0a84ff !important;
 }
 
-#spelare-toolbar .picker .button.active {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button.active {
     color: rgba(255, 255, 255, 0.92) !important;
     background: transparent !important;
 }
 
-#spelare-toolbar .picker .button.active:hover {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button.active:hover {
     color: #fff !important;
     background: #0a84ff !important;
 }
 
 /* Sound only is a different kind of choice: a separator sets it apart. */
-#spelare-toolbar .picker .separator {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .separator {
     all: initial !important;
     display: block !important;
     height: 1px !important;
@@ -537,7 +553,7 @@ video::cue(:future) {
         background: transparent !important;
     }
 
-    #spelare-toolbar .picker .button:hover {
+    :is(#spelare-toolbar, #spelare-menu-layer) .picker .button:hover {
         color: rgba(255, 255, 255, 0.92) !important;
         background: transparent !important;
     }
@@ -612,7 +628,7 @@ video::cue(:future) {
 }
 
 /* A section title in a menu (Quality, Audio). */
-#spelare-toolbar .picker .menu-heading {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .menu-heading {
     all: initial !important;
     display: block !important;
     padding: 6px 10px 2px 28px !important;
@@ -798,32 +814,32 @@ button:has(> .spelare-dislikes) {
 
 /* Menu rows are one line: the label is cut short with "…" when it doesn't
    fit, and a time (chapters) sits in a dimmed column of its own. */
-#spelare-toolbar .picker {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker {
     max-width: min(380px, 90vw) !important;
 }
 
-#spelare-toolbar .picker .button {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .button {
     display: flex !important;
     min-width: 0 !important;
     white-space: nowrap !important;
 }
 
-#spelare-toolbar .picker .menu-label,
-#spelare-toolbar .picker .menu-prefix {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .menu-label,
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .menu-prefix {
     all: initial !important;
     font: inherit !important;
     color: inherit !important;
     white-space: nowrap !important;
 }
 
-#spelare-toolbar .picker .menu-label {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .menu-label {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
 }
 
-#spelare-toolbar .picker .menu-prefix {
+:is(#spelare-toolbar, #spelare-menu-layer) .picker .menu-prefix {
     flex: none !important;
     min-width: 4.4em !important;
     margin-right: 10px !important;
