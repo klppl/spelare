@@ -2,6 +2,21 @@
 
 Spelare is a Safari web extension that plays YouTube videos directly in Safari's native `<video>` player using YouTube's native HLS streams.
 
+<p>
+  <a href="https://github.com/klppl/spelare/releases/latest/download/Spelare.dmg"><img src="design/download-mac.svg" alt="Download Spelare for Mac" height="64"></a>
+  &nbsp;
+  <a href="https://github.com/klppl/spelare/releases"><img src="design/all-releases.svg" alt="All releases" height="64"></a>
+</p>
+
+### Install
+
+1. Download **Spelare.dmg** and drag Spelare into Applications.
+2. Open Spelare once, so Safari finds the extension.
+3. In Safari, choose **Settings ▸ Extensions** and turn on **Spelare**, then allow it on youtube.com.
+
+Spelare updates itself: opening the app checks for a new version. It's signed with a Developer ID and
+notarized by Apple.
+
 By utilizing native HLS playback, Spelare provides:
 - Clean, ad-free video playback
 - Low battery consumption and efficient hardware-accelerated decoding

@@ -94,7 +94,10 @@ xcodebuild -exportArchive \
 APP="$(find "$OUT/export" -maxdepth 1 -name '*.app' | head -1)"
 [[ -d "$APP" ]] || fail "export produced no .app"
 codesign --verify --deep --strict "$APP"
-codesign -dvv "$APP" 2>&1 | grep -q "Authority=Developer ID Application" \
+# Captured first: grep -q exits at the first match, and codesign's write to
+# the closed pipe would then fail the check under pipefail.
+SIGNATURE="$(codesign -dvv "$APP" 2>&1)"
+grep -q "Authority=Developer ID Application" <<<"$SIGNATURE" \
     || fail "$APP is not signed with Developer ID"
 
 step "Building DMG"
@@ -132,6 +135,12 @@ NOTES="release-notes/$VERSION.md"
     "$UPDATES"
 cp "$UPDATES/appcast.xml" "$OUT/appcast.xml"
 
+# A copy without the version in its name, so the README's download button can
+# link to releases/latest/download/<name>.dmg and always get the newest.
+LATEST_DMG="$OUT/latest/$DMG_NAME.dmg"
+mkdir -p "$OUT/latest"
+cp "$DMG" "$LATEST_DMG"
+
 if [[ $PUBLISH == 1 ]]; then
     step "Publishing v$VERSION to $RELEASES_REPO"
     NOTES_ARGS=(--generate-notes)
@@ -139,7 +148,7 @@ if [[ $PUBLISH == 1 ]]; then
     TARGET_ARGS=()
     [[ "$(gh repo view --json nameWithOwner -q .nameWithOwner)" == "$RELEASES_REPO" ]] \
         && TARGET_ARGS=(--target "$(git rev-parse HEAD)")
-    gh release create "v$VERSION" "$DMG" "$OUT/appcast.xml" \
+    gh release create "v$VERSION" "$DMG" "$LATEST_DMG" "$OUT/appcast.xml" \
         --repo "$RELEASES_REPO" --title "$DMG_NAME $VERSION" "${NOTES_ARGS[@]}" "${TARGET_ARGS[@]}"
 fi
 
@@ -147,5 +156,5 @@ step "Done"
 echo "DMG:     $DMG"
 echo "Appcast: $OUT/appcast.xml"
 [[ $NOTARIZE == 0 ]] && echo "Not notarized: don't distribute this build."
-[[ $PUBLISH == 0 ]] && echo "Publish with: gh release create v$VERSION \"$DMG\" \"$OUT/appcast.xml\" --repo $RELEASES_REPO"
+[[ $PUBLISH == 0 ]] && echo "Publish with: gh release create v$VERSION \"$DMG\" \"$LATEST_DMG\" \"$OUT/appcast.xml\" --repo $RELEASES_REPO"
 exit 0

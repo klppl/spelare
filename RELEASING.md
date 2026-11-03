@@ -58,7 +58,8 @@ Sparkle and Safari's per-extension settings are tied to them.
 
 The script checks that `extension/` matches `src/`, runs the tests, archives, exports with Developer ID,
 builds and signs the DMG, notarizes and staples it, writes `appcast.xml`, and creates the GitHub release
-`v<version>` with both files attached. Leave out `--publish` to stop before uploading; everything ends up
+`v<version>` with the DMG (twice: `Spelare-<version>.dmg` for Sparkle, and `Spelare.dmg`, which the
+README's download button links to through `releases/latest/download/`) and the appcast attached. Leave out `--publish` to stop before uploading; everything ends up
 in `build/release/<version>/`.
 
 The build number (`CFBundleVersion`) is the commit count, so each release must be built from a newer
