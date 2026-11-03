@@ -33,6 +33,8 @@ details come from an Android player request.
 - **`xcode/ios/Spelare/`**: the iPhone and iPad app and extension. It uses the same `extension/` files,
   and the Mac project's native handler and iCloud entitlement.
 - **`design/`**: the app and toolbar icons, the README's buttons and label, and the icon rendering script.
+  `design/mockups/` builds the README's screenshots from the extension's real CSS, popup and
+  `popup.js`; run `design/mockups/build.sh` after changing how Spelare looks.
 
 ## Build and test
 

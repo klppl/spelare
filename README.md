@@ -14,6 +14,8 @@ your media keys working the way they should. No ads, and nothing to set up.
 
 Free, open source, and signed and notarized by Apple. Works on macOS 12 or later.
 
+<img src="design/screenshots/player.png" alt="A video playing in Safari's own player, with Spelare's controls at the top: the current chapter, Settings and Theater">
+
 ## Why Spelare
 
 YouTube's player is a website's player: a heavy layer of scripts that feeds video in piece by piece,
@@ -37,6 +39,17 @@ video on a Mac nice comes back.
 - **Dislike counts.** Optionally see them again, estimated by Return YouTube Dislike.
 - **In sync.** Settings, per-channel speeds and where you left off follow you between your devices
   through iCloud.
+
+<table>
+  <tr>
+    <td width="50%"><img src="design/screenshots/menu.png" alt="Spelare's Settings menu open on the video, listing qualities from Auto to 360p, Sound only, and the original and dubbed audio tracks"></td>
+    <td width="50%"><img src="design/screenshots/popup.png" alt="Spelare's settings popup under its toolbar button, with options for the player, default quality, captions, what to hide, dislike counts and iCloud sync"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Quality and audio</b>, right on the video</td>
+    <td align="center"><b>Settings</b>, a click away in Safari's toolbar</td>
+  </tr>
+</table>
 
 ### Keyboard shortcuts
 

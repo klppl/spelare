@@ -1,0 +1,250 @@
+/* The stage for the README mockups: a Safari window on a soft backdrop, with
+   a dark video page inside. Spelare's own parts use extension/mac.css and
+   extension/popup.css, so they look exactly as they do in Safari. */
+:root {
+    --ink: #f1f1f4;
+    --ink-dim: rgba(241, 241, 244, 0.62);
+    --page: #0f0f12;
+    --card: #1c1c21;
+    --glass: rgba(28, 28, 32, 0.58);
+    --glass-edge: rgba(255, 255, 255, 0.16);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font: 14px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(1200px 700px at 15% 10%, #8a7bff55, transparent 60%),
+        radial-gradient(900px 600px at 90% 90%, #ff9e6b44, transparent 60%),
+        linear-gradient(160deg, #ece9ff, #f7f1ff 45%, #fff3ea);
+}
+
+/* The Safari window */
+.window {
+    position: relative;
+    width: var(--window-width, 1180px);
+    height: var(--window-height, 720px);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--page);
+    box-shadow:
+        0 0 0 0.5px rgba(0, 0, 0, 0.35),
+        0 30px 80px rgba(40, 20, 90, 0.35),
+        0 10px 24px rgba(40, 20, 90, 0.18);
+}
+
+.chrome {
+    position: relative;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 16px;
+    background: #2a2a2f;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.lights { display: flex; gap: 8px; }
+.lights i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+.lights i:nth-child(1) { background: #ff5f57; }
+.lights i:nth-child(2) { background: #febc2e; }
+.lights i:nth-child(3) { background: #28c840; }
+
+.chrome .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: rgba(255, 255, 255, 0.55);
+}
+.chrome .icon svg { width: 17px; height: 17px; }
+
+.address {
+    flex: 1;
+    max-width: 520px;
+    margin: 0 auto;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.09);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 13.5px;
+}
+.address svg { width: 11px; height: 11px; opacity: 0.6; }
+
+/* Spelare's toolbar button, with the badge showing what's playing. */
+.extension {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+}
+.extension.open { background: rgba(255, 255, 255, 0.14); }
+/* The toolbar icon is a black template image; Safari draws it white here. */
+.extension img { width: 19px; height: 19px; filter: invert(1); opacity: 0.85; }
+.extension .badge {
+    position: absolute;
+    right: -6px;
+    bottom: -2px;
+    padding: 0 4px;
+    height: 14px;
+    border-radius: 7px;
+    background: #5b46e8;
+    color: #fff;
+    font: 700 9px/14px -apple-system, sans-serif;
+}
+
+/* The video page */
+.page {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 22px;
+    padding: 20px 22px;
+    height: calc(100% - 52px);
+    color: var(--ink);
+}
+
+.player {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: visible;
+    background: url("scene.svg") center / cover;
+}
+.player .frame {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: url("scene.svg") center / cover;
+}
+
+/* Safari's own video controls, drawn as simple glass shapes. */
+.native {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 23px;
+    height: 46px;
+    background: var(--glass);
+    box-shadow: inset 0 0 0 0.5px var(--glass-edge), 0 1px 3px rgba(0, 0, 0, 0.25);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    color: rgba(255, 255, 255, 0.92);
+}
+.native .b {
+    width: 38px;
+    height: 38px;
+    border-radius: 19px;
+    display: grid;
+    place-items: center;
+}
+.native svg { width: 18px; height: 18px; }
+.native.top-left { top: 6px; left: 6px; }
+.native.top-right { top: 6px; right: 6px; }
+.native.bar {
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    gap: 10px;
+    padding: 4px 16px 4px 4px;
+    font: 500 12.5px/1 -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+}
+.native .scrub {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.28);
+    overflow: hidden;
+}
+.native .scrub i {
+    display: block;
+    width: 38%;
+    height: 100%;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.title { margin: 14px 2px 6px; font: 700 19px/1.25 -apple-system, sans-serif; letter-spacing: -0.01em; }
+.channel { display: flex; align-items: center; gap: 10px; margin: 0 2px; color: var(--ink-dim); }
+.channel .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffb46b, #7b6bff);
+}
+.channel b { color: var(--ink); font-weight: 600; }
+
+.side { display: flex; flex-direction: column; gap: 12px; }
+.card { display: grid; grid-template-columns: 132px 1fr; gap: 10px; }
+.card .thumb { aspect-ratio: 16 / 9; border-radius: 8px; }
+.card .lines i { display: block; height: 9px; border-radius: 5px; background: #2b2b33; margin: 4px 0 8px; }
+.card .lines i:nth-child(2) { width: 70%; }
+.card .lines i:nth-child(3) { width: 45%; height: 7px; background: #24242b; }
+
+/* The popup, as Safari shows it: a popover under the toolbar button. */
+.popover {
+    position: absolute;
+    top: 50px;
+    right: 18px;
+    width: var(--popup-width, 560px);
+    border-radius: 14px;
+    background: #f6f6f8;
+    color: #1d1d1f;
+    box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.25), 0 24px 60px rgba(0, 0, 0, 0.45);
+    z-index: 5;
+}
+.popover::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    right: var(--arrow-right, 40px);
+    width: 14px;
+    height: 14px;
+    background: #f6f6f8;
+    transform: rotate(45deg);
+    box-shadow: -0.5px -0.5px 0 rgba(0, 0, 0, 0.18);
+}
+.popover iframe { display: block; width: 100%; height: var(--popup-height, 580px); border: 0; border-radius: 14px; }
+
+.actions { display: flex; gap: 8px; margin-left: auto; }
+.actions svg { width: 15px; height: 15px; }
+.actions span {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    background: #24242b;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 13px;
+}
+.description {
+    margin: 14px 2px 0;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--ink-dim);
+    font-size: 13px;
+    line-height: 1.5;
+}
+.description b { color: var(--ink); }

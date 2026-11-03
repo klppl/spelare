@@ -1,0 +1,18 @@
+/* Checkboxes as Safari draws them in its popover, which is an active window.
+   The renderer's window never is, and WebKit then draws checked boxes as a
+   bare checkmark. */
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    background: #fff;
+    vertical-align: -2px;
+}
+input[type="checkbox"]:checked {
+    border-color: #0a7aff;
+    background: #0a7aff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='white' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 6.3 4.9 8.6 9.4 3.6'/%3E%3C/svg%3E") center / 10px no-repeat;
+}
