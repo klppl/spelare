@@ -30,6 +30,11 @@ div#player-ads.style-scope.ytd-watch-flexy,
     pointer-events: none !important;
 }
 
+/* The mobile site's own player controls, which sit over Spelare's video. */
+ytm-custom-control,
+#player-control-overlay,
+#player-control-container,
+.player-controls-background,
 .ytp-popup,
 .ytp-caption-window-container,
 .ytp-impression-link,
@@ -520,6 +525,24 @@ video::cue(:future) {
     background: rgba(255, 255, 255, 0.16) !important;
 }
 
+/* On touch screens Safari's corner controls are single icons, so the
+   capsule can use more of the width. */
+@media (hover: none) {
+    #spelare-toolbar {
+        max-width: calc(100% - 112px) !important;
+    }
+
+    /* No hover on touch: a tapped button would otherwise stay lit. */
+    #spelare-toolbar .controls .button:hover:not([aria-expanded="true"]) {
+        background: transparent !important;
+    }
+
+    #spelare-toolbar .picker .button:hover {
+        color: rgba(255, 255, 255, 0.92) !important;
+        background: transparent !important;
+    }
+}
+
 /* The capsule: one group like Safari's own (same height, inset, radius and
    material), with borderless segments inside. */
 #spelare-toolbar .controls {
@@ -619,6 +642,10 @@ body.webkit #primary #spelare-toolbar {
    shelf around each /shorts/ link, whatever YouTube calls it. */
 html[data-spelare-hide-shorts] [data-spelare-hidden-shorts],
 html[data-spelare-hide-shorts] ytd-reel-shelf-renderer,
+html[data-spelare-hide-shorts] ytm-reel-shelf-renderer,
+html[data-spelare-hide-shorts] ytm-shorts-lockup-view-model,
+html[data-spelare-hide-shorts] shorts-lockup-view-model,
+html[data-spelare-hide-shorts] ytm-pivot-bar-item-renderer:has(.pivot-shorts),
 html[data-spelare-hide-shorts] ytd-rich-shelf-renderer[is-shorts],
 html[data-spelare-hide-shorts] ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
 html[data-spelare-hide-shorts] ytd-rich-section-renderer:has(ytm-shorts-lockup-view-model),
@@ -647,6 +674,10 @@ html[data-spelare-hide-end-screens] .html5-endscreen.videowall-endscreen {
 
 /* Comments below the video, and the comments panel. */
 html[data-spelare-hide-comments] #comments,
+html[data-spelare-hide-comments] ytm-item-section-renderer[section-identifier="comment-item-section"],
+html[data-spelare-hide-comments] ytm-comments-entry-point-header-renderer,
+html[data-spelare-hide-comments] ytm-comments-entry-point-teaser-view-model,
+html[data-spelare-hide-comments] comments-entry-point-teaser-view-model,
 html[data-spelare-hide-comments] ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-comments-section"] {
     display: none !important;
 }
@@ -655,6 +686,8 @@ html[data-spelare-hide-comments] ytd-engagement-panel-section-list-renderer[targ
    feed. Playlists and live chat in the sidebar stay. */
 html[data-spelare-hide-recommendations] #related,
 html[data-spelare-hide-recommendations] ytd-browse[page-subtype="home"] ytd-rich-grid-renderer,
+html[data-spelare-hide-recommendations] ytm-item-section-renderer[section-identifier="related-items"],
+html[data-spelare-hide-recommendations][data-spelare-page="home"] ytm-rich-grid-renderer,
 html[data-spelare-hide-recommendations] [page-subtype="home"] #primary {
     display: none !important;
 }

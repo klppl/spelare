@@ -16,3 +16,7 @@ export function isAllowedHost(url, domain) {
 
 export const isGooglevideoURL = (url) => isAllowedHost(url, "googlevideo.com");
 export const isYouTubeURL = (url) => isAllowedHost(url, "youtube.com");
+
+// YouTube's main site: the desktop one, and the mobile one iPhones get.
+export const isYouTubeSiteHost = (hostname) =>
+  hostname === "www.youtube.com" || hostname === "m.youtube.com";

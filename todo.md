@@ -13,21 +13,20 @@
 ## Platforms
 
 - [ ] **iPhone and iPad.** Background playback (screen locked, or in another app) is the main reason to
-  use Spelare on iOS. Needs:
-  - an iOS target in the Xcode project
-  - support for `m.youtube.com`
-  - touch-friendly toolbar sizes (keyboard shortcuts don't apply there)
+  use Spelare on iOS.
+  - [x] iOS app and extension (`xcode/ios/Spelare`, sharing `extension/`, the native handler and the
+    iCloud entitlement with the Mac project)
+  - [x] `m.youtube.com`: Spelare's player, the capsule, chapters and the Settings menu work (simulator)
+  - [x] Touch: one tap opens a button, no sticky hover, menus stay on screen, no Theater on mobile
+  - [ ] Background playback with the screen locked or Safari in the background
+  - [ ] The popup on iPhone (a sheet; check its layout)
+  - [ ] Hide options and dislike counts on the mobile site
+  - [ ] iPad (gets the desktop site) and a real device (needs registering in the developer account)
 
 ## Player
 
-- [ ] **SponsorBlock.** Fetch segments from `sponsor.ajay.app`, looked up by a hash prefix of the video
-  id so the service never learns which video is playing.
-  - Skip, mute or just mark each category.
-  - Popup setting per category (sponsor, intro, self-promo…).
-  - A short "Skipped sponsor · Undo" message.
-  - Show segments as chapters too (see below).
 - [x] **Chapters.** Read them from the player response or from description timestamps. Expose them as a
-  `kind="chapters"` track and a chapter menu in the toolbar. SponsorBlock segments feed the same list.
+  `kind="chapters"` track and a chapter menu in the toolbar.
 - [x] **Change quality in fullscreen and theater mode.**
   - [x] `q` / Shift-Q cycles through qualities.
   - [x] The popup changes the current tab's quality right away, without a reload.

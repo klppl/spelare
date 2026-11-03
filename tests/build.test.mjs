@@ -23,8 +23,9 @@ test('the 170 KB stream observer ships only in the top-frame observer.js', () =>
     assert.equal(entries.length, 1);
     assert.equal(entries[0].all_frames, false);
     assert.equal(entries[0].run_at, 'document_start');
-    assert.deepEqual(entries[0].matches, ['https://www.youtube.com/*']);
+    assert.deepEqual(entries[0].matches, ['https://www.youtube.com/*', 'https://m.youtube.com/*'], 'desktop and mobile site (iPhone)');
     assert.ok(entries[0].exclude_matches.includes('https://www.youtube.com/shorts*'));
+    assert.ok(entries[0].exclude_matches.includes('https://m.youtube.com/shorts*'));
 });
 
 test('the built content scripts inject exactly the page scripts in src/page', () => {

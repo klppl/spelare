@@ -11,7 +11,13 @@ const read = (path) => fs.readFileSync(new URL(`../${path}`, import.meta.url), '
 
 test('applyHideSettings sets an attribute for each hide setting that is on', () => {
     const attributes = new Set();
-    const root = { toggleAttribute: (name, on) => (on ? attributes.add(name) : attributes.delete(name)) };
+    const values = {};
+    const root = {
+        toggleAttribute: (name, on) => (on ? attributes.add(name) : attributes.delete(name)),
+        getAttribute: (name) => values[name] ?? null,
+        setAttribute: (name, value) => { values[name] = value; },
+    };
+    globalThis.location ??= new URL('https://www.youtube.com/watch?v=x');
     const before = { ...settings };
     try {
         settings.hideShorts = true;
@@ -21,6 +27,7 @@ test('applyHideSettings sets an attribute for each hide setting that is on', () 
         settings.hideShorts = false;
         applyHideSettings(root);
         assert.deepEqual([...attributes], ['data-spelare-hide-comments']);
+        assert.equal(values['data-spelare-page'], location.pathname === '/' ? 'home' : 'other', 'the page is marked for home-only rules');
     } finally {
         Object.assign(settings, before);
     }

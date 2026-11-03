@@ -12,17 +12,30 @@ import { reportPlayerState } from "./player-state.js";
 import { settings, videoState } from "./state.js";
 
 // A toolbar button. Mouse clicks don't focus it, so Space and the other
-// hotkeys keep going to the video afterwards.
+// hotkeys keep going to the video afterwards. On touch screens it acts when
+// the finger lifts: iOS may otherwise treat a first tap as a hover only.
 export function makeToolbarButton(label, onClick, className) {
   const button = document.createElement("button");
   button.type = "button";
   button.classList.add("button");
   if (className) button.classList.add(className);
   button.textContent = label;
+  let touched = false;
   button.addEventListener("mousedown", (event) => event.preventDefault());
+  button.addEventListener("pointerup", (event) => {
+    if (event.pointerType !== "touch") return;
+    touched = true;
+    event.preventDefault();
+    onClick(event);
+  });
   button.addEventListener("click", (event) => {
     event.stopPropagation();
     event.preventDefault();
+    // The click that follows a handled touch.
+    if (touched) {
+      touched = false;
+      return;
+    }
     onClick(event);
   });
   return button;
@@ -110,7 +123,9 @@ export function openMenu(toolbar, anchor, name, items, onPick) {
   toolbar.updateVisibility?.();
 }
 // Lets a long menu (a video with twenty dubs) use the video's height down to
-// Safari's play bar, and opens it with the playing item in view.
+// Safari's play bar, keeps it inside the window (on a phone the Settings
+// menu would run off the right edge), and opens it with the playing item in
+// view.
 function fitMenu(toolbar, menu) {
   const video = toolbar.parentElement?.querySelector(
     "video[data-spelare-video]",
@@ -123,8 +138,16 @@ function fitMenu(toolbar, menu) {
       `${Math.max(room, MENU_MIN_HEIGHT_PX)}px`,
     );
   }
+  const overflow =
+    menu.getBoundingClientRect().right -
+    (document.documentElement.clientWidth - MENU_EDGE_MARGIN_PX);
+  if (overflow > 0) {
+    const left = parseFloat(menu.style.getPropertyValue("--spelare-menu-left"));
+    menu.style.setProperty("--spelare-menu-left", `${left - overflow}px`);
+  }
   menu.querySelector(".active")?.scrollIntoView({ block: "nearest" });
 }
+const MENU_EDGE_MARGIN_PX = 8;
 // Room left below a menu for Safari's play bar, and the least a menu gets.
 const MENU_BOTTOM_MARGIN_PX = 52;
 const MENU_MIN_HEIGHT_PX = 120;
@@ -318,10 +341,15 @@ function autoHide(toolbar, video) {
       update();
     }, delay);
   };
-  video.addEventListener("mousemove", () => {
+  const showForAWhile = () => {
     pointerActive = true;
     update();
     settleAfter(HIDE_DELAY_MS);
+  };
+  video.addEventListener("mousemove", showForAWhile);
+  // On touch screens a tap shows them, as it shows Safari's own controls.
+  video.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "mouse") showForAWhile();
   });
   // A short grace period, so moving onto the controls doesn't flicker them.
   video.addEventListener("mouseleave", () => settleAfter(150));
@@ -363,16 +391,19 @@ export function createToolbar(video) {
   settingsButton.setAttribute("aria-haspopup", "menu");
   settingsButton.setAttribute("aria-expanded", "false");
   controls.appendChild(settingsButton);
-  const theaterButton = makeToolbarButton(
-    "",
-    () => toggleTheaterMode(),
-    "theater",
-  );
-  theaterButton.classList.add("icon-only");
-  theaterButton.title = "Theater mode (T)";
-  theaterButton.setAttribute("aria-label", "Theater mode");
-  controls.appendChild(theaterButton);
-  trackTheaterMode(theaterButton);
+  // Theater only where YouTube has it (the desktop site, not the mobile one).
+  if (document.querySelector("ytd-watch-flexy")) {
+    const theaterButton = makeToolbarButton(
+      "",
+      () => toggleTheaterMode(),
+      "theater",
+    );
+    theaterButton.classList.add("icon-only");
+    theaterButton.title = "Theater mode (T)";
+    theaterButton.setAttribute("aria-label", "Theater mode");
+    controls.appendChild(theaterButton);
+    trackTheaterMode(theaterButton);
+  }
   toolbar.updateVisibility = autoHide(toolbar, video);
   video.closest("div").insertBefore(toolbar, video);
 }

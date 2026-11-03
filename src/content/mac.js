@@ -6,6 +6,7 @@ import { log } from "./log.js";
 import { validateCandidate, validateVideoError } from "./messages.js";
 import { setBounded } from "./bounded-map.js";
 import { claimInstall } from "../shared/namespace.js";
+import { isYouTubeSiteHost } from "../shared/hosts.js";
 import {
   CONTENT_MESSAGE,
   CONTENT_MESSAGE_SOURCE,
@@ -157,7 +158,7 @@ function removeSpelareVideos() {
   // Nothing plays yet on a newly loaded page; clears the last page's badge.
   reportPlayerState("none");
   const isTopFrame =
-    window.top === window && location.hostname === "www.youtube.com";
+    window.top === window && isYouTubeSiteHost(location.hostname);
   log("injectPageScript");
   injectPageScript(__SPELARE_PAGE_SCRIPT__("caption-mirroring"));
   injectPageScript(__SPELARE_PAGE_SCRIPT__("player-bridge"));

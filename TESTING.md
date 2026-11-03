@@ -99,3 +99,13 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
     with iCloud" stops both directions on that device.
 15. Popup: Japanese auto-translate (`ja`) produces a translated track; a setting saved as Japanese or 4320p by an
     older version shows as Japanese / Auto.
+
+## iPhone and iPad (Simulator)
+
+Build `xcode/ios/Spelare` for an iOS Simulator, run it once, then in the simulator's Settings → Apps → Safari →
+Extensions turn Spelare on and set m.youtube.com (and www.youtube.com for iPad) to Allow.
+
+1. On `m.youtube.com/watch?v=…` Spelare's player replaces YouTube's: iOS's own controls (±10 s, timeline,
+   captions), no YouTube player controls on top. One tap shows them together with the capsule.
+2. The capsule fits between iOS's corner buttons, with no Theater; a long chapter title shortens.
+3. One tap on Settings opens the menu, which stays on screen; picking a quality switches it.

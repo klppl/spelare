@@ -28,6 +28,8 @@ By utilizing native HLS playback, Spelare provides:
   - `src/shared/`: Shared utilities, host validation, and messaging protocols.
   - `src/page/vendor/`: Vendored challenge solver (`yt-dlp/ejs`).
 - **`xcode/SpelareDev/`**: Native macOS Xcode host application and Safari extension wrapper.
+- **`xcode/ios/Spelare/`**: iPhone and iPad app and extension. Uses the same `extension/` files, and the Mac
+  project's native handler (`SafariWebExtensionHandler.swift`) and iCloud entitlement.
 - **`design/`**: App and toolbar SVG icon assets and rendering script.
 
 ---

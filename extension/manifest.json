@@ -15,7 +15,8 @@
     },
 
     "background": {
-        "scripts": [ "background.js" ]
+        "scripts": [ "background.js" ],
+        "persistent": false
     },
 
     "content_scripts": [{
@@ -23,19 +24,19 @@
         "css": [ "mac.css" ],
         "run_at": "document_start",
         "all_frames": true,
-        "matches": [ "https://www.youtube-nocookie.com/*", "https://www.youtube.com/*" ],
-        "exclude_matches": [ "https://www.youtube.com/shorts*", "https://studio.youtube.com/*" ]
+        "matches": [ "https://www.youtube-nocookie.com/*", "https://www.youtube.com/*", "https://m.youtube.com/*" ],
+        "exclude_matches": [ "https://www.youtube.com/shorts*", "https://m.youtube.com/shorts*", "https://studio.youtube.com/*" ]
     }, {
         "js": [ "observer.js" ],
         "run_at": "document_start",
         "all_frames": false,
-        "matches": [ "https://www.youtube.com/*" ],
-        "exclude_matches": [ "https://www.youtube.com/shorts*" ]
+        "matches": [ "https://www.youtube.com/*", "https://m.youtube.com/*" ],
+        "exclude_matches": [ "https://www.youtube.com/shorts*", "https://m.youtube.com/shorts*" ]
     }, {
         "js": [ "shorts.js" ],
         "run_at": "document_start",
         "all_frames": true,
-        "matches": [ "https://www.youtube.com/shorts/*" ]
+        "matches": [ "https://www.youtube.com/shorts/*", "https://m.youtube.com/shorts/*" ]
     }, {
         "js": [ "override.js" ],
         "run_at": "document_start",

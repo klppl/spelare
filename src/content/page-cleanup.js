@@ -17,5 +17,14 @@ export const HIDE_ATTRIBUTES = {
 export function applyHideSettings(root = document.documentElement) {
   for (const [name, attribute] of Object.entries(HIDE_ATTRIBUTES))
     root.toggleAttribute(attribute, settings[name] === true);
+  markPage(root);
   scheduleHideGuard();
+}
+
+// data-spelare-page="home" on the home page, for rules that only apply there
+// (the mobile site has no page-subtype attribute like the desktop one).
+export function markPage(root = document.documentElement) {
+  const page = location.pathname === "/" ? "home" : "other";
+  if (root.getAttribute("data-spelare-page") !== page)
+    root.setAttribute("data-spelare-page", page);
 }

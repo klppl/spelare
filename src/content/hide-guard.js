@@ -11,7 +11,9 @@
 // Runs in the top www.youtube.com frame only, a short while after the page
 // changes, and only while a hide setting is on.
 import { log } from "./log.js";
+import { markPage } from "./page-cleanup.js";
 import { settings } from "./state.js";
+import { isYouTubeSiteHost } from "../shared/hosts.js";
 
 export const SHORTS_MARK = "data-spelare-hidden-shorts";
 const MARK_DELAY_MS = 250;
@@ -38,8 +40,15 @@ const LANDMARK_IDS = new Set([
   "chat",
   "guide",
   "movie_player",
+  "player-container-id",
 ]);
-const LANDMARK_TAGS = new Set(["HTML", "BODY", "YTD-APP", "YTD-PAGE-MANAGER"]);
+const LANDMARK_TAGS = new Set([
+  "HTML",
+  "BODY",
+  "YTD-APP",
+  "YTD-PAGE-MANAGER",
+  "YTM-APP",
+]);
 
 export function isLandmark(node) {
   return LANDMARK_TAGS.has(node.tagName) || LANDMARK_IDS.has(node.id);
@@ -186,6 +195,7 @@ export function scheduleHideGuard() {
   if (!started || !anyHideSetting()) return;
   markTimer ??= setTimeout(() => {
     markTimer = null;
+    markPage();
     if (settings.hideShorts) markShorts();
   }, MARK_DELAY_MS);
   detectTimer ??= setTimeout(() => {
@@ -196,11 +206,7 @@ export function scheduleHideGuard() {
 
 let started = false;
 export function setupHideGuard() {
-  if (
-    started ||
-    window.top !== window ||
-    location.hostname !== "www.youtube.com"
-  )
+  if (started || window.top !== window || !isYouTubeSiteHost(location.hostname))
     return;
   started = true;
   new MutationObserver(scheduleHideGuard).observe(document.documentElement, {

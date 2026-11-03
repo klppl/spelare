@@ -6,6 +6,7 @@ import { setBounded } from "./bounded-map.js";
 import { log } from "./log.js";
 import { settings } from "./state.js";
 import { currentVideoId } from "./url.js";
+import { isYouTubeSiteHost } from "../shared/hosts.js";
 
 const API = "https://returnyoutubedislikeapi.com/votes?videoId=";
 // YouTube's dislike button, newest markup first. The page also has hidden
@@ -153,7 +154,7 @@ export function refreshDislikes() {
 
 // The top www.youtube.com frame only.
 export function setupDislikes() {
-  if (window.top !== window || location.hostname !== "www.youtube.com") return;
+  if (window.top !== window || !isYouTubeSiteHost(location.hostname)) return;
   setInterval(update, CHECK_EVERY_MS);
   document.addEventListener("yt-navigate-finish", update);
   update();
