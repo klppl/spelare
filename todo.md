@@ -18,8 +18,17 @@
     iCloud entitlement with the Mac project)
   - [x] `m.youtube.com`: Spelare's player, the capsule, chapters and the Settings menu work (simulator)
   - [x] Touch: one tap opens a button, no sticky hover, menus stay on screen, no Theater on mobile
-  - [ ] Background playback with the screen locked or Safari in the background
-  - [ ] The popup on iPhone (a sheet; check its layout)
+  - [ ] Spelare's video doesn't advance in the simulator: `playing` fires, the clock stays put at every
+    quality (144p too), stall recovery pauses and nudges, then it waits forever (readyState 2).
+    YouTube's own player plays fine there. Check on a real iPhone before anything else.
+  - [x] The diagnostic log was always empty on iOS (the non-persistent background page lost it); it's
+    kept in `storage.session` now
+  - [x] "Sound only" works on `m.youtube.com` and keeps playing with the screen locked (simulator)
+  - [ ] Background playback with video: iOS pauses a playing video when the screen locks. Switch to
+    the sound-only stream when the page is hidden and back when it's shown (needs a real iPhone to
+    test, since the simulator can't play the video streams)
+  - [ ] The popup on iPhone opens as a sheet but is too wide: text runs off the right edge
+  - [ ] The capsule's quality menu shows only about four rows on iPhone
   - [ ] Hide options and dislike counts on the mobile site
   - [ ] iPad (gets the desktop site) and a real device (needs registering in the developer account)
 

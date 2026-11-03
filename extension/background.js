@@ -1,26 +1,45 @@
 // The debug log behind the popup's "Show diagnostic log": the last 100 entries
 // from content scripts, kept per tab and cleared when the tab loads a page.
-// It lives in memory, so it's gone if Safari unloads this background page.
+// Safari unloads this background page when it's idle (always on iOS), so the
+// log is kept in storage.session, with the copy in memory as a cache.
 const MAX_ENTRIES = 100;
 const logsByTab = new Map();
+const sessionStore = browser.storage?.session;
+const logKey = (tabId) => `log:${tabId}`;
+// Log updates run one at a time, so two batches can't overwrite each other.
+let logQueue = Promise.resolve();
 
-function addLog(tabId, args) {
-    const strings = args.map((arg) => {
+async function readLog(tabId) {
+    if (logsByTab.has(tabId)) return logsByTab.get(tabId);
+    if (!sessionStore) return [];
+    const stored = (await sessionStore.get(logKey(tabId)))[logKey(tabId)];
+    return Array.isArray(stored) ? stored : [];
+}
+
+// `change` gets the tab's log and returns the new one, or null to delete it.
+function updateLog(tabId, change) {
+    logQueue = logQueue
+        .then(async () => {
+            const logs = change(await readLog(tabId));
+            if (logs) logsByTab.set(tabId, logs);
+            else logsByTab.delete(tabId);
+            if (!sessionStore) return;
+            if (logs) await sessionStore.set({ [logKey(tabId)]: logs });
+            else await sessionStore.remove(logKey(tabId));
+        })
+        .catch((error) => console.log('Spelare: log update failed:', error?.message || error));
+    return logQueue;
+}
+
+function addLogs(tabId, entries) {
+    const lines = entries.map((args) => args.map((arg) => {
         try {
             return JSON.stringify(arg).replace(/^"(.+)"$/, '$1');
         } catch {
             return String(arg);
         }
-    });
-
-    let logs = logsByTab.get(tabId);
-    if (!logs) {
-        logs = [];
-        logsByTab.set(tabId, logs);
-    }
-    logs.push(strings.join(' '));
-
-    if (logs.length > MAX_ENTRIES) logs.shift();
+    }).join(' '));
+    updateLog(tabId, (logs) => [...logs, ...lines].slice(-MAX_ENTRIES));
 }
 
 // The toolbar button's badge and tooltip for one tab, as the tab's content
@@ -37,9 +56,9 @@ browser.runtime.onMessage.addListener((request, sender) => {
     const tabId = sender?.tab?.id ?? -1;
     if (request.type === 'debug-log') {
         // Content scripts send batches of entries, each an array of log() args.
-        for (const args of request.entries) addLog(tabId, args);
+        if (Array.isArray(request.entries)) addLogs(tabId, request.entries);
     } else if (request.type === 'clear-logs') {
-        logsByTab.delete(tabId);
+        updateLog(tabId, () => null);
         // A YouTube page loaded: a good moment to pick up other devices' changes.
         pullFromICloud();
     } else if (request.type === 'player-state') {
@@ -49,12 +68,12 @@ browser.runtime.onMessage.addListener((request, sender) => {
         return pullFromICloud({ force: true });
     } else if (request.type === 'get-logs') {
         // The popup asks for the log of the tab it was opened over.
-        return Promise.resolve({ logs: logsByTab.get(request.tabId) ?? [] });
+        return logQueue.then(() => readLog(request.tabId)).then((logs) => ({ logs }));
     }
 });
 
 browser.tabs?.onRemoved.addListener((tabId) => {
-    logsByTab.delete(tabId);
+    updateLog(tabId, () => null);
 });
 
 // iCloud sync. The extension's native handler keeps values in iCloud's

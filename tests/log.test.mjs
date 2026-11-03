@@ -31,7 +31,7 @@ test('log calls are sent as one batch, copied when logged', () => {
     }
 });
 
-function loadBackground() {
+function loadBackground({ session } = {}) {
     let listener;
     let onRemoved;
     const context = vm.createContext({
@@ -45,6 +45,7 @@ function loadBackground() {
             storage: {
                 local: { get: async () => ({ icloudSync: false }), set: async () => {} },
                 onChanged: { addListener: () => {} },
+                session,
             },
         },
         Promise,
@@ -79,6 +80,34 @@ test('background.js keeps a log per tab, cleared by that tab and when it closes'
     onRemoved(1);
     assert.deepEqual(await logsOf(1), []);
     assert.deepEqual(await logsOf(undefined), [], 'no tab, no log');
+});
+
+// A storage.session stand-in that outlives one background page.
+function fakeSession() {
+    const data = {};
+    return {
+        data,
+        get: async (key) => (key in data ? { [key]: structuredClone(data[key]) } : {}),
+        set: async (values) => { for (const [key, value] of Object.entries(values)) data[key] = structuredClone(value); },
+        remove: async (key) => { delete data[key]; },
+    };
+}
+
+test('background.js keeps the log in storage.session, so it survives an unload', async () => {
+    const session = fakeSession();
+    const first = loadBackground({ session });
+    first.listener({ type: 'debug-log', entries: [['one']] }, { tab: { id: 3 } });
+    first.listener({ type: 'debug-log', entries: [['two', 2]] }, { tab: { id: 3 } });
+    assert.deepEqual([...(await first.listener({ type: 'get-logs', tabId: 3 }, {})).logs], ['one', 'two 2']);
+    const second = loadBackground({ session });
+    assert.deepEqual([...(await second.listener({ type: 'get-logs', tabId: 3 }, {})).logs], ['one', 'two 2'], 'a reloaded background page reads it back');
+    second.listener({ type: 'debug-log', entries: Array.from({ length: 120 }, (_, i) => [i]) }, { tab: { id: 3 } });
+    const { logs } = await second.listener({ type: 'get-logs', tabId: 3 }, {});
+    assert.equal(logs.length, 100);
+    assert.equal(logs.at(-1), '119');
+    second.listener({ type: 'clear-logs' }, { tab: { id: 3 } });
+    await second.listener({ type: 'get-logs', tabId: 3 }, {});
+    assert.deepEqual(Object.keys(session.data), []);
 });
 
 test('background.js shows each tab\'s player state on the toolbar button, kept short', () => {
