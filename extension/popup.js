@@ -1,3 +1,6 @@
+// A phone gets the popup laid out for its narrow sheet (popup.css).
+if (globalThis.screen?.width <= 500) document.documentElement?.classList.add('phone');
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // Picks up settings changed on other devices before showing them, but

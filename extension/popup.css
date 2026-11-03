@@ -96,66 +96,66 @@ pre {
 }
 
 /* iPhone: the popup is a sheet as wide as the screen. Each section's name
-   goes above its options, lines wrap, and checkboxes are big enough to tap. */
-@media (max-width: 480px) {
-    body {
-        padding: 16px;
-    }
+   goes above its options, lines wrap, and checkboxes are big enough to tap.
+   (Chosen by the screen's width, set by popup.js: on iPad the popup is a
+   popover as wide as its content, which wrapping would only make narrower.) */
+html.phone body {
+    padding: 16px;
+}
 
-    table,
-    tbody,
-    tr,
-    td {
-        display: block;
-    }
+html.phone table,
+html.phone tbody,
+html.phone tr,
+html.phone td {
+    display: block;
+}
 
-    table tr td:first-of-type {
-        padding: 15px 0 8px;
-    }
+html.phone table tr td:first-of-type {
+    padding: 15px 0 8px;
+}
 
-    table tr:first-of-type td:first-of-type {
-        padding-top: 0;
-    }
+html.phone table tr:first-of-type td:first-of-type {
+    padding-top: 0;
+}
 
-    table tr td:last-of-type {
-        padding-top: 0;
-    }
+html.phone table tr td:last-of-type {
+    padding-top: 0;
+}
 
-    table tr td:first-of-type p {
-        text-align: left;
-        font: -apple-system-headline;
-    }
+html.phone table tr td:first-of-type p {
+    text-align: left;
+    font: -apple-system-headline;
+}
 
-    table tr td .field {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px 10px;
-        margin-top: 10px;
-        white-space: normal;
-    }
+html.phone table tr td .field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin-top: 10px;
+    white-space: normal;
+}
 
-    table tr td .field input[type="checkbox"] {
-        flex: none;
-        height: 20px;
-        width: 20px;
-        margin-right: 0;
-    }
+html.phone table tr td .field input[type="checkbox"] {
+    flex: none;
+    height: 20px;
+    width: 20px;
+    margin-right: 0;
+}
 
-    table tr td .field label {
-        flex: 1;
-    }
+html.phone table tr td .field label {
+    flex: 1;
+}
 
-    table tr td .field select {
-        max-width: 100%;
-    }
+html.phone table tr td .field select {
+    max-width: 100%;
+}
 
-    table tr td .field .note {
-        flex-basis: 100%;
-        margin-top: 0;
-    }
+html.phone table tr td .field .note {
+    flex-basis: 100%;
+    margin-top: 0;
+}
 
-    pre {
-        width: auto;
-    }
+html.phone pre {
+    width: auto;
 }

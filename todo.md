@@ -26,12 +26,15 @@
   - [x] Background playback with video: iOS pauses a playing video when the screen locks, so
     `background-playback.js` switches to the sound-only stream while the page is hidden and back when
     it's shown (works on iPhone with the screen locked)
-  - [ ] Background playback with Safari in the background (switching apps) instead of locking
+  - [x] Background playback with Safari in the background (switching apps) instead of locking
   - [x] The popup on iPhone: a sheet with each section's name above its options, wrapping lines
   - [x] Menus on touch screens open in a layer over the page, so a short (portrait) video doesn't cut
     them off
-  - [ ] Hide options and dislike counts on the mobile site
-  - [ ] iPad (gets the desktop site) and a real device (needs registering in the developer account)
+  - [x] Hide options and dislike counts on the mobile site
+  - [x] A real iPhone (registered in the developer account)
+  - [x] iPad (desktop site, iPad Pro 11" simulator, portrait): the capsule, the full Settings menu,
+    sound-only playback with the screen locked, and the popup as a wide popover
+  - [ ] iPad in landscape, where the desktop site has room for Theater (no iPad to test on)
 
 ## Player
 
