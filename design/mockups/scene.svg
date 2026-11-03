@@ -1,90 +1,111 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
-  <!-- An original illustration standing in for a video frame: a fjord at golden hour. -->
+  <!-- An original illustration standing in for a video frame: an 80s pop
+       video, in homage to the most famous one. A stylized dancer in a trench
+       coat, in front of a brick arch and a chain-link fence. -->
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1B1F4B"/>
-      <stop offset="0.38" stop-color="#5B3C88"/>
-      <stop offset="0.62" stop-color="#E0717A"/>
-      <stop offset="0.78" stop-color="#FFB46B"/>
-      <stop offset="1" stop-color="#FFD9A0"/>
+      <stop offset="0" stop-color="#7EC4EC"/>
+      <stop offset="0.55" stop-color="#BFE2F2"/>
+      <stop offset="1" stop-color="#FFE2C2"/>
     </linearGradient>
-    <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#FFF4D6" stop-opacity="0.95"/>
-      <stop offset="0.25" stop-color="#FFD48A" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="#FF9E6B" stop-opacity="0"/>
+    <linearGradient id="brick" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C46A4E"/>
+      <stop offset="1" stop-color="#9A4A3A"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B9AFA8"/>
+      <stop offset="1" stop-color="#8E837E"/>
+    </linearGradient>
+    <linearGradient id="coat" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D9B48A"/>
+      <stop offset="1" stop-color="#B98E64"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D2713E"/>
+      <stop offset="1" stop-color="#A44F2A"/>
+    </linearGradient>
+    <pattern id="fence" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path d="M0 0 H34 M0 0 V34" stroke="#4E5A66" stroke-width="2.4" fill="none"/>
+    </pattern>
+    <radialGradient id="spot" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#E58A7C"/>
-      <stop offset="0.35" stop-color="#7A4C8C"/>
-      <stop offset="1" stop-color="#1F1A44"/>
-    </linearGradient>
-    <linearGradient id="streak" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFE7B5" stop-opacity="0.9"/>
-      <stop offset="1" stop-color="#FFE7B5" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#B0628A"/>
-      <stop offset="1" stop-color="#8A4F86"/>
-    </linearGradient>
-    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#6A3F7F"/>
-      <stop offset="1" stop-color="#4A2F6B"/>
-    </linearGradient>
-    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2E2252"/>
-      <stop offset="1" stop-color="#1A1436"/>
-    </linearGradient>
-    <filter id="haze"><feGaussianBlur stdDeviation="2.5"/></filter>
   </defs>
 
   <rect width="1600" height="900" fill="url(#sky)"/>
-  <!-- Stars, fading into the dusk -->
-  <g fill="#FFFFFF">
-    <circle cx="140" cy="70" r="1.6" opacity="0.7"/>
-    <circle cx="320" cy="140" r="1.2" opacity="0.5"/>
-    <circle cx="520" cy="60" r="1.4" opacity="0.6"/>
-    <circle cx="1180" cy="90" r="1.5" opacity="0.6"/>
-    <circle cx="1380" cy="50" r="1.2" opacity="0.5"/>
-    <circle cx="1490" cy="160" r="1.3" opacity="0.4"/>
-    <circle cx="860" cy="40" r="1.1" opacity="0.5"/>
+
+  <!-- A brick arch bridge across the back -->
+  <path d="M0 250 H1600 V640 H1280 V520 A480 210 0 0 0 320 520 V640 H0Z" fill="url(#brick)"/>
+  <path d="M0 250 H1600 V285 H0Z" fill="#7F3B2E" opacity="0.55"/>
+  <g stroke="#7F3B2E" stroke-width="2" opacity="0.35">
+    <path d="M0 330 H330 M1270 330 H1600 M0 400 H330 M1270 400 H1600 M0 470 H320 M1280 470 H1600 M0 540 H320 M1280 540 H1600"/>
+    <path d="M80 285 V330 M200 285 V330 M140 330 V400 M260 330 V400 M80 400 V470 M200 400 V470 M140 470 V540 M260 470 V540
+             M1350 285 V330 M1470 285 V330 M1410 330 V400 M1530 330 V400 M1350 400 V470 M1470 400 V470 M1410 470 V540 M1530 470 V540"/>
+    <path d="M400 285 V330 M560 285 V330 M720 285 V330 M880 285 V330 M1040 285 V330 M1200 285 V330 M480 330 V380 M640 330 V370 M800 330 V368 M960 330 V370 M1120 330 V380"/>
   </g>
-  <!-- The sun, low between the mountains -->
-  <circle cx="930" cy="505" r="260" fill="url(#sunGlow)"/>
-  <circle cx="930" cy="505" r="62" fill="#FFF1CF"/>
+  <!-- Light through the arch -->
+  <path d="M320 640 V520 A480 210 0 0 1 1280 520 V640Z" fill="#FFF1DC" opacity="0.55"/>
+  <ellipse cx="800" cy="470" rx="420" ry="260" fill="url(#spot)"/>
 
-  <!-- Mountains: far, middle, near -->
-  <path d="M0 520 L120 455 L230 495 L360 420 L470 470 L560 440 L660 500 L760 470 L860 520 L1000 515 L1100 460 L1210 430 L1320 470 L1430 420 L1520 455 L1600 440 L1600 560 L0 560Z" fill="url(#far)" opacity="0.85" filter="url(#haze)"/>
-  <path d="M0 560 L90 470 L170 500 L300 380 L380 430 L470 400 L620 540 L0 560Z" fill="url(#mid)"/>
-  <path d="M1600 560 L1500 440 L1420 470 L1300 360 L1210 410 L1120 390 L980 540 L1600 560Z" fill="url(#mid)"/>
-  <path d="M0 560 L0 470 L60 430 L150 520 L230 500 L330 560Z" fill="url(#near)"/>
-  <path d="M1600 560 L1600 430 L1530 400 L1450 470 L1360 500 L1260 560Z" fill="url(#near)"/>
+  <!-- Ground -->
+  <rect y="640" width="1600" height="260" fill="url(#ground)"/>
+  <path d="M0 640 H1600" stroke="#6F6560" stroke-width="3" opacity="0.5"/>
 
-  <!-- Water and the sun's reflection -->
-  <rect y="558" width="1600" height="342" fill="url(#water)"/>
-  <path d="M0 560 L620 540 L980 540 L1600 560Z" fill="#000000" opacity="0.08"/>
-  <path d="M905 562 L955 562 L1000 900 L860 900Z" fill="url(#streak)" opacity="0.28" filter="url(#haze)"/>
-  <g stroke="#FFE7B5" stroke-linecap="round" opacity="0.7">
-    <path d="M890 600 H970" stroke-width="3"/>
-    <path d="M870 640 H990" stroke-width="2.5" opacity="0.8"/>
-    <path d="M900 690 H1010" stroke-width="2.5" opacity="0.6"/>
-    <path d="M860 750 H950" stroke-width="2" opacity="0.5"/>
-    <path d="M940 810 H1040" stroke-width="2" opacity="0.4"/>
-    <path d="M300 640 H380" stroke-width="2" opacity="0.25"/>
-    <path d="M1250 700 H1340" stroke-width="2" opacity="0.25"/>
+  <!-- Chain-link fence panels, left and right -->
+  <g>
+    <rect x="0" y="360" width="520" height="330" fill="url(#fence)" opacity="0.75"/>
+    <rect x="1080" y="360" width="520" height="330" fill="url(#fence)" opacity="0.75"/>
+    <g stroke="#3E4852" stroke-width="9" stroke-linecap="round">
+      <path d="M0 360 H520 M1080 360 H1600"/>
+      <path d="M40 360 V700 M290 360 V700 M520 360 V700 M1080 360 V700 M1320 360 V700 M1570 360 V700"/>
+    </g>
   </g>
 
-  <!-- A small boat on the water -->
-  <g transform="translate(560 640)">
-    <path d="M-34 0 H34 L24 12 H-24Z" fill="#1A1436"/>
-    <path d="M0 0 V-46" stroke="#1A1436" stroke-width="3"/>
-    <path d="M2 -44 L28 -4 H2Z" fill="#1A1436"/>
-    <path d="M-30 18 H30" stroke="#FFE7B5" stroke-width="2" opacity="0.35" stroke-linecap="round"/>
+  <!-- Shadow under the dancer -->
+  <ellipse cx="805" cy="808" rx="170" ry="22" fill="#4A3F3A" opacity="0.28"/>
+
+  <!-- The dancer, mid-move: hips to one side, one arm up -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- Legs and shoes -->
+    <path d="M770 600 L742 790" stroke="#2D3550" stroke-width="40" fill="none"/>
+    <path d="M832 600 L876 782" stroke="#2D3550" stroke-width="40" fill="none"/>
+    <path d="M712 800 Q740 784 768 796 L770 808 H708Z" fill="#1E2236"/>
+    <path d="M862 792 Q894 778 918 794 L918 806 H860Z" fill="#1E2236"/>
+
+    <!-- Arm down and out (behind the coat) -->
+    <path d="M745 365 Q700 430 676 492" stroke="#C49A70" stroke-width="44" fill="none"/>
+    <circle cx="672" cy="504" r="17" fill="#F0C29C"/>
+
+    <!-- Trench coat -->
+    <path d="M742 340 Q800 318 862 340 L880 470 Q900 560 924 650 Q812 676 690 650 Q712 560 726 470Z" fill="url(#coat)"/>
+    <!-- Lapels and the open front -->
+    <path d="M778 336 L800 430 L822 336" fill="#E9E4DC"/>
+    <path d="M770 338 L800 440 L760 470 L748 352Z" fill="#C69B70"/>
+    <path d="M830 338 L800 440 L842 470 L854 352Z" fill="#C69B70"/>
+    <path d="M800 440 L790 655" stroke="#A97F57" stroke-width="3" fill="none"/>
+    <!-- Belt -->
+    <path d="M722 492 Q806 512 884 492" stroke="#9C7550" stroke-width="16" fill="none"/>
+    <rect x="770" y="490" width="26" height="22" rx="3" fill="none" stroke="#6F5235" stroke-width="4"/>
+
+    <!-- Arm up, bent at the elbow -->
+    <path d="M860 362 Q930 340 944 280 Q950 240 930 210" stroke="#C49A70" stroke-width="44" fill="none"/>
+    <circle cx="926" cy="196" r="18" fill="#F0C29C"/>
+
+    <!-- Neck and head -->
+    <path d="M792 300 V336 H812 V300Z" fill="#E8B48C"/>
+    <ellipse cx="803" cy="262" rx="40" ry="46" fill="#F0C29C"/>
+    <!-- The quiff -->
+    <path d="M760 258 Q752 206 790 188 Q826 168 852 196 Q872 214 846 232 Q830 222 806 226 Q782 230 772 262Z" fill="url(#hair)"/>
+    <path d="M770 214 Q796 190 836 196" stroke="#E58C55" stroke-width="5" fill="none" opacity="0.7"/>
+    <!-- Ear -->
+    <ellipse cx="764" cy="270" rx="7" ry="11" fill="#E8B48C"/>
   </g>
 
-  <!-- Birds -->
-  <g fill="none" stroke="#2A1F4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M700 300 q12 -10 24 0 q12 -10 24 0"/>
-    <path d="M760 270 q9 -8 18 0 q9 -8 18 0"/>
-    <path d="M660 250 q8 -7 16 0 q8 -7 16 0"/>
+  <!-- 80s sparkle -->
+  <g fill="#FFFFFF" opacity="0.9">
+    <path d="M1010 180 l6 16 16 6 -16 6 -6 16 -6 -16 -16 -6 16 -6z"/>
+    <path d="M560 210 l4 11 11 4 -11 4 -4 11 -4 -11 -11 -4 11 -4z" opacity="0.8"/>
+    <path d="M1130 420 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z" opacity="0.7"/>
   </g>
 </svg>

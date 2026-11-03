@@ -14,7 +14,7 @@ your media keys working the way they should. No ads, and nothing to set up.
 
 Free, open source, and signed and notarized by Apple. Works on macOS 12 or later.
 
-<img src="design/screenshots/player.png" alt="A video playing in Safari's own player, with Spelare's controls at the top: the current chapter, Settings and Theater">
+<img src="design/screenshots/player.png" alt="Never Gonna Give You Up playing in Safari's own player, with Spelare's controls at the top: the current chapter, Settings and Theater">
 
 ## Why Spelare
 

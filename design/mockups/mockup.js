@@ -47,9 +47,9 @@ function nativeControls() {
     <div class="native top-right"><span class="b">${icon.sound}</span></div>
     <div class="native bar">
       <span class="b">${playing ? icon.pause : icon.play}</span>
-      <span>12:04</span>
+      <span>1:58</span>
       <span class="scrub"><i></i></span>
-      <span>−19:41</span>
+      <span>−1:35</span>
       <span class="b">${icon.airplay}</span>
       <span class="b">${icon.captions}</span>
     </div>`;
@@ -61,7 +61,7 @@ function spelareToolbar() {
     return `
     <div id="spelare-toolbar" class="visible">
       <div class="controls">
-        <button type="button" class="button chapters" aria-haspopup="menu" aria-expanded="false">Golden hour over the fjord</button>
+        <button type="button" class="button chapters" aria-haspopup="menu" aria-expanded="false">The dance break</button>
         <button type="button" class="button settings icon-only" aria-label="Settings" aria-haspopup="menu" aria-expanded="${menuOpen}"></button>
         <button type="button" class="button theater icon-only" aria-label="Theater mode"></button>
       </div>
@@ -128,13 +128,13 @@ document.body.innerHTML = `
           ${nativeControls()}
           ${spelareToolbar()}
         </div>
-        <div class="title">Golden Hour in the Fjords: A Slow Film for Quiet Evenings (4K)</div>
-        <div class="channel"><span class="avatar"></span><b>Nordic Light</b> · 812K views
-          <div class="actions"><span>${icon.like} 24K</span><span>${icon.dislike} 312</span><span>${icon.share} Share</span></div>
+        <div class="title">Never Gonna Give You Up (Official Video) (4K Remaster)</div>
+        <div class="channel"><span class="avatar"></span><b>Rick Astley</b> · 1.7B views
+          <div class="actions"><span>${icon.like} 18M</span><span>${icon.dislike} 412K</span><span>${icon.share} Share</span></div>
         </div>
-        <div class="description"><b>812K views · 2 weeks ago</b><br>
-          Thirty minutes of golden hour on a Norwegian fjord, filmed in one take. Put it on, dim the lights, breathe out.<br>
-          0:00 Golden hour over the fjord · 9:40 The boat · 18:15 Blue hour · 26:30 First stars</div>
+        <div class="description"><b>1.7B views · 16 years ago</b><br>
+          The official video, remastered in 4K. You knew it was coming. Now it plays in Safari's own player, the way it always should have.<br>
+          0:00 Intro · 0:19 First verse · 0:43 Chorus · 1:52 The dance break · 2:50 Key change</div>
       </div>
       <div class="side">${sideCards()}</div>
     </div>
