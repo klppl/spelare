@@ -124,16 +124,44 @@ test('dubs come from the visionOS playlist when the played one has none', async 
     }
 });
 
-test('the Settings menu: Quality, then Audio only for videos with dubs', async () => {
-    const { settingsMenuItems } = await import('../src/content/toolbar.js');
+test('the Quality menu: Auto, best to worst, then Sound only set apart', async () => {
+    const { qualityMenuItems, qualityButtonLabel } = await import('../src/content/toolbar.js');
     const streams = { auto: 'a', '1080p': 'b', '720p': 'c', audio: 'd' };
-    const plain = settingsMenuItems(streams, '1080p', { original: null, dubs: [] }, null);
-    assert.deepEqual(plain.map((item) => item.heading ?? `${item.id}${item.active ? ' ✓' : ''}`), [
-        'Quality', 'quality:auto', 'quality:1080p ✓', 'quality:720p', 'quality:audio',
+    const items = qualityMenuItems(streams, '1080p');
+    assert.deepEqual(items.map((item) => `${item.id}${item.active ? ' ✓' : ''}`), [
+        'auto', '1080p ✓', '720p', 'audio',
     ]);
-    assert.equal(plain.at(-1).separatorBefore, true, 'Sound only set apart');
-    const dubbed = settingsMenuItems(streams, 'auto', { original: 'en', dubs: ['es'] }, 'es');
-    assert.deepEqual(dubbed.slice(5).map((item) => item.heading ?? `${item.id}${item.active ? ' ✓' : ''}`), [
-        'Audio', 'audio:', 'audio:es ✓',
+    assert.equal(items.at(-1).separatorBefore, true, 'Sound only set apart');
+    assert.equal(qualityButtonLabel('1080p'), '1080p');
+    assert.equal(qualityButtonLabel(null), 'Auto');
+    assert.equal(qualityButtonLabel('audio'), 'Sound only');
+});
+
+test('Theater is offered on the desktop site only, not on mobile, embeds or Music', async () => {
+    const { hasTheaterMode } = await import('../src/content/toolbar.js');
+    const at = (url) => hasTheaterMode(new URL(url));
+    assert.equal(at('https://www.youtube.com/watch?v=dQw4w9WgXcQ'), true);
+    assert.equal(at('https://m.youtube.com/watch?v=dQw4w9WgXcQ'), false);
+    assert.equal(at('https://www.youtube.com/embed/dQw4w9WgXcQ'), false);
+    assert.equal(at('https://music.youtube.com/watch?v=dQw4w9WgXcQ'), false);
+});
+
+test('the Subtitles and Speed menus, and their button labels', async () => {
+    const { subtitleMenuItems, subtitleButtonLabel, speedMenuItems, speedLabel } = await import('../src/content/toolbar.js');
+    const subtitles = subtitleMenuItems(['English (auto-generated)', 'Auto-translated (Swedish)'], 'English (auto-generated)');
+    assert.deepEqual(subtitles.map((item) => `${item.id}${item.active ? ' ✓' : ''}`), [
+        '', 'English (auto-generated) ✓', 'Auto-translated (Swedish)',
     ]);
+    assert.equal(subtitles[0].label, 'Off');
+    assert.equal(subtitles[1].separatorBefore, true, 'Off set apart from the tracks');
+    assert.equal(subtitleMenuItems(['English'], null)[0].active, true, 'nothing showing: Off');
+    assert.equal(subtitleButtonLabel(undefined), 'Off');
+    assert.equal(subtitleButtonLabel({ language: 'en', label: 'English (auto-generated)' }), 'English');
+    assert.equal(subtitleButtonLabel({ language: '', label: 'Some very long caption track name' }), 'Some very long capt…');
+    const speeds = speedMenuItems(1.5);
+    assert.deepEqual(speeds.filter((item) => item.active).map((item) => item.id), ['1.5']);
+    assert.equal(speeds.find((item) => item.id === '1').label, 'Normal');
+    assert.equal(speedLabel(1), '1×');
+    assert.equal(speedLabel(1.25), '1.25×');
+    assert.equal(speedLabel(1.1000001), '1.1×');
 });

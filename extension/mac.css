@@ -337,7 +337,8 @@ video::cue(:future) {
     overflow: visible !important;
 }
 
-/* Spelare's controls: Quality and Theater, centred at the top of the video.
+/* Spelare's controls: Chapters, Quality, Audio, Subtitles, Speed and
+   Theater, centred at the top of the video.
    Safari's own controls take the corners (full screen and Picture in
    Picture top left, sound top right) and the bottom (play bar), so these sit
    between them as a third group, in the same height and translucent material.
@@ -431,6 +432,9 @@ video::cue(:future) {
 }
 
 #spelare-toolbar .settings::before,
+#spelare-toolbar .audio::before,
+#spelare-toolbar .subtitles::before,
+#spelare-toolbar .speed::before,
 #spelare-toolbar .theater::before {
     content: "" !important;
     display: block !important;
@@ -446,8 +450,49 @@ video::cue(:future) {
     --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M2 4.5h6.5M13.5 4.5H14M2 11.5h.5M7.5 11.5H14'/%3E%3Ccircle cx='11' cy='4.5' r='2'/%3E%3Ccircle cx='5' cy='11.5' r='2'/%3E%3C/svg%3E") !important;
 }
 
+/* Theater: arrows outwards (make the video wider); in theater mode they
+   point inwards (back to the default, smaller size). */
 #spelare-toolbar .theater {
-    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6'%3E%3Crect x='1.5' y='3.5' width='13' height='9' rx='2'/%3E%3C/svg%3E") !important;
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='1' y='3' width='14' height='10' rx='2'/%3E%3Cpath d='M4.5 8h7M6.5 6 4.5 8l2 2M9.5 6l2 2-2 2'/%3E%3C/svg%3E") !important;
+}
+
+#spelare-toolbar .audio {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 6v4h2.5l3.5 3V3L5 6z'/%3E%3Cpath d='M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.5a6.3 6.3 0 0 1 0 9'/%3E%3C/svg%3E") !important;
+}
+
+#spelare-toolbar .subtitles {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='1' y='3' width='14' height='10' rx='2'/%3E%3Cpath d='M4 8.5h3M9 8.5h3M4 10.8h5M11 10.8h1'/%3E%3C/svg%3E") !important;
+}
+
+#spelare-toolbar .speed {
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.6 12.5a6 6 0 1 1 10.8 0'/%3E%3Cpath d='M8 9.5l3-3.5'/%3E%3Ccircle cx='8' cy='9.5' r='.8' fill='black'/%3E%3C/svg%3E") !important;
+}
+
+/* Too little room for every label (toolbar.js measures): Audio, Subtitles
+   and Speed become round icon buttons. While measuring, the chapter keeps
+   its usual width (up to 260px). */
+#spelare-toolbar.compact .controls :is(.audio, .subtitles, .speed) {
+    width: 38px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    font-size: 0 !important;
+    gap: 0 !important;
+}
+
+#spelare-toolbar.compact .controls :is(.audio, .subtitles, .speed)::before {
+    width: 19px !important;
+    height: 19px !important;
+    margin: 0 !important;
+}
+
+#spelare-toolbar.measuring .controls .chapters {
+    flex: none !important;
+}
+
+/* Audio is only there for videos with dubs, Subtitles for videos with
+   captions (toolbar.js sets hidden). */
+#spelare-toolbar .controls .button[hidden] {
+    display: none !important;
 }
 
 /* The quality menu: drops down below the Quality button, like a macOS
@@ -459,7 +504,7 @@ video::cue(:future) {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 0 !important;
-    min-width: 150px !important;
+    min-width: 170px !important;
     max-height: var(--spelare-menu-max-height, 280px) !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
@@ -492,10 +537,11 @@ video::cue(:future) {
 
 :is(#spelare-toolbar, #spelare-menu-layer) .picker .button {
     gap: 8px !important;
-    height: 28px !important;
-    padding: 0 10px 0 8px !important;
+    height: 32px !important;
+    padding: 0 12px 0 9px !important;
     border-radius: 7px !important;
-    line-height: 28px !important;
+    font-size: 14px !important;
+    line-height: 32px !important;
     background: transparent !important;
     box-shadow: none !important;
     -webkit-backdrop-filter: none !important;
@@ -608,7 +654,7 @@ video::cue(:future) {
     margin: 0 !important;
 }
 
-/* Theater on: the same button, its icon filled rather than the button lit. */
+/* Theater on: the same button, its icon swapped rather than the button lit. */
 #spelare-toolbar .controls .theater.active {
     color: rgba(255, 255, 255, 0.92) !important;
     background: transparent !important;
@@ -619,7 +665,7 @@ video::cue(:future) {
 }
 
 #spelare-toolbar .controls .theater.active {
-    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='black' stroke='black' stroke-width='1.6'%3E%3Crect x='1.5' y='3.5' width='13' height='9' rx='2'/%3E%3C/svg%3E") !important;
+    --spelare-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='1' y='3' width='14' height='10' rx='2'/%3E%3Cpath d='M3.5 8h3M4.8 6.2 6.5 8l-1.7 1.8M12.5 8h-3M11.2 6.2 9.5 8l1.7 1.8'/%3E%3C/svg%3E") !important;
 }
 
 /* YouTube's player took over: a text segment in place of Settings. */
@@ -631,7 +677,7 @@ video::cue(:future) {
 :is(#spelare-toolbar, #spelare-menu-layer) .picker .menu-heading {
     all: initial !important;
     display: block !important;
-    padding: 6px 10px 2px 28px !important;
+    padding: 6px 10px 2px 29px !important;
     font: 600 11px/16px -apple-system, system-ui, sans-serif !important;
     letter-spacing: 0.02em !important;
     color: rgba(255, 255, 255, 0.5) !important;

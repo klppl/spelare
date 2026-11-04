@@ -14,7 +14,7 @@ your media keys working the way they should. No ads, and nothing to set up.
 
 Free, open source, and signed and notarized by Apple. Works on macOS 12 or later.
 
-<img src="design/screenshots/player.png" alt="Never Gonna Give You Up playing in Safari's own player, with Spelare's controls at the top: the current chapter, Settings and Theater">
+<img src="design/screenshots/player.png" alt="Never Gonna Give You Up playing in Safari's own player, with Spelare's controls at the top: the current chapter, quality, audio language, subtitles, speed and Theater">
 
 ## Why Spelare
 
@@ -42,7 +42,7 @@ video on a Mac nice comes back.
 
 <table>
   <tr>
-    <td width="50%"><img src="design/screenshots/menu.png" alt="Spelare's Settings menu open on the video, listing qualities from Auto to 360p, Sound only, and the original and dubbed audio tracks"></td>
+    <td width="50%"><img src="design/screenshots/menu.png" alt="Spelare's Quality menu open on the video, listing qualities from Auto to 360p and Sound only"></td>
     <td width="50%"><img src="design/screenshots/popup.png" alt="Spelare's settings popup under its toolbar button, with options for the player, default quality, captions, what to hide, dislike counts and iCloud sync"></td>
   </tr>
   <tr>

@@ -601,8 +601,13 @@
       };
     return { text: "", title: "Spelare" };
   }
+  var stateListener = null;
+  function onPlayerStateChange(listener) {
+    stateListener = listener;
+  }
   var lastSent = null;
   function reportPlayerState(state) {
+    stateListener?.();
     if (window.top !== window) return;
     const badge = playerBadge(state, videoState.activeQuality ?? "auto");
     const key = `${badge.text}|${badge.title}`;
@@ -775,38 +780,109 @@
     if (openMenuOf(toolbar)?.anchor === anchor) closeMenu(toolbar);
     else open();
   }
-  function settingsMenuItems(streams, currentQuality, tracks, language) {
-    const items = [{ heading: "Quality" }];
-    for (const quality of MENU_QUALITIES)
-      if (streams[quality])
-        items.push({
-          id: `quality:${quality}`,
-          label: qualityLabel(quality),
-          active: quality === currentQuality,
-          separatorBefore: quality === "audio"
-        });
-    if (tracks.dubs.length > 0) {
-      items.push({ heading: "Audio", separatorBefore: true });
-      for (const item of audioMenuItems(tracks, language))
-        items.push({ ...item, id: `audio:${item.id ?? ""}` });
-    }
-    return items;
+  function qualityMenuItems(streams, currentQuality) {
+    return MENU_QUALITIES.filter((quality) => streams[quality]).map(
+      (quality) => ({
+        id: quality,
+        label: qualityLabel(quality),
+        active: quality === currentQuality,
+        separatorBefore: quality === "audio"
+      })
+    );
   }
-  function showSettingsMenu(video, toolbar, anchor) {
-    const items = settingsMenuItems(
+  function showQualityMenu(video, toolbar, anchor) {
+    const items = qualityMenuItems(
       videoState.streams,
-      videoState.activeQuality || settings.quality,
+      videoState.activeQuality || settings.quality
+    );
+    openMenu(
+      toolbar,
+      anchor,
+      "Quality",
+      items,
+      (id) => setQuality(video, id, { save: true })
+    );
+  }
+  function showAudioMenu(video, toolbar, anchor) {
+    const items = audioMenuItems(
       availableAudioTracks(),
       videoState.audioLanguage
     );
-    openMenu(toolbar, anchor, "Settings", items, (id) => {
-      const [kind, value] = [
-        id.slice(0, id.indexOf(":")),
-        id.slice(id.indexOf(":") + 1)
-      ];
-      if (kind === "quality") setQuality(video, value, { save: true });
-      else setAudioLanguage(video, value || null);
+    openMenu(
+      toolbar,
+      anchor,
+      "Audio",
+      items,
+      (id) => setAudioLanguage(video, id)
+    );
+  }
+  function qualityButtonLabel(quality) {
+    return qualityLabel(quality || "auto");
+  }
+  function subtitleTracks(video) {
+    return Array.from(video.textTracks).filter(
+      (track) => track.kind === "subtitles"
+    );
+  }
+  function subtitleMenuItems(labels, showing) {
+    return [
+      { id: "", label: "Off", active: showing === null, separatorBefore: false },
+      ...labels.map((label, index) => ({
+        id: label,
+        label,
+        active: label === showing,
+        separatorBefore: index === 0
+      }))
+    ];
+  }
+  function subtitleButtonLabel(track) {
+    if (!track) return "Off";
+    const name = languageName(track.language);
+    if (name !== "System") return name;
+    return track.label.length > 20 ? `${track.label.slice(0, 19)}…` : track.label;
+  }
+  function showingSubtitleTrack(video) {
+    return subtitleTracks(video).find((track) => track.mode === "showing");
+  }
+  function showSubtitleMenu(video, toolbar, anchor) {
+    const tracks = subtitleTracks(video);
+    const items = subtitleMenuItems(
+      tracks.map((track) => track.label),
+      showingSubtitleTrack(video)?.label ?? null
+    );
+    openMenu(toolbar, anchor, "Subtitles", items, (label) => {
+      log("setSubtitles:", label || "off");
+      for (const track of tracks)
+        track.mode = label && track.label === label ? "showing" : "disabled";
+      videoState.captionChoice = label || null;
     });
+  }
+  var SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+  function speedLabel(rate) {
+    return `${Math.round(rate * 100) / 100}×`;
+  }
+  function speedMenuItems(current2) {
+    return SPEEDS.map((rate) => ({
+      id: String(rate),
+      label: rate === 1 ? "Normal" : speedLabel(rate),
+      active: Math.abs(rate - current2) < 1e-3,
+      separatorBefore: false
+    }));
+  }
+  function showSpeedMenu(video, toolbar, anchor) {
+    openMenu(
+      toolbar,
+      anchor,
+      "Speed",
+      speedMenuItems(video.playbackRate),
+      (rate) => {
+        log("setSpeed:", rate);
+        video.playbackRate = Number(rate);
+      }
+    );
+  }
+  function audioLanguageLabel(language) {
+    return language === null ? "Original" : languageLabel(language);
   }
   function languageLabel(code) {
     const name = languageName(code);
@@ -886,25 +962,45 @@
   }
   function trackTheaterMode(button) {
     const update2 = () => {
+      if (!button.isConnected && observer) {
+        observer.disconnect();
+        return;
+      }
       const theater = isTheaterMode();
       button.classList.toggle("active", theater);
       button.setAttribute("aria-pressed", String(theater));
+      button.title = theater ? "Default view (T)" : "Theater mode (T)";
     };
+    const observer = new MutationObserver(update2);
     update2();
-    const watchPage = document.querySelector("ytd-watch-flexy");
-    if (watchPage)
-      new MutationObserver(update2).observe(watchPage, {
-        attributes: true,
-        attributeFilter: ["theater"]
-      });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["theater"],
+      subtree: true
+    });
+  }
+  function hasTheaterMode(where = location) {
+    return where.hostname === "www.youtube.com" && !where.pathname.startsWith("/embed");
+  }
+  function fitControls(toolbar) {
+    const controls = toolbar.querySelector(".controls");
+    if (!controls || !toolbar.isConnected) return;
+    toolbar.classList.remove("compact");
+    toolbar.classList.add("measuring");
+    const overflows = controls.scrollWidth > controls.clientWidth + 1;
+    toolbar.classList.remove("measuring");
+    toolbar.classList.toggle("compact", overflows);
   }
   var HIDE_DELAY_MS = 3e3;
   function autoHide(toolbar, video) {
     let pointerActive = false;
+    let shown = false;
     let overControls = false;
     let idleTimer;
     const update2 = () => {
       const show = pointerActive || overControls || video.paused || openMenuOf(toolbar) !== null;
+      if (show && !shown) toolbar.refresh?.();
+      shown = show;
       toolbar.classList.toggle("visible", show);
     };
     const settleAfter = (delay) => {
@@ -944,29 +1040,83 @@
     const controls = document.createElement("div");
     controls.classList.add("controls");
     toolbar.appendChild(controls);
-    const settingsButton = makeToolbarButton(
-      "",
-      () => toggleMenu(
-        toolbar,
-        settingsButton,
-        () => showSettingsMenu(video, toolbar, settingsButton)
-      ),
-      "settings"
+    const menuButton = (className, name, title, open) => {
+      const button = makeToolbarButton(
+        "",
+        () => toggleMenu(toolbar, button, () => open(video, toolbar, button)),
+        className
+      );
+      button.title = title;
+      button.setAttribute("aria-haspopup", "menu");
+      button.setAttribute("aria-expanded", "false");
+      button.dataset.name = name;
+      return button;
+    };
+    const qualityButton = menuButton(
+      "settings",
+      "Quality",
+      "Quality (Q / Shift-Q change it)",
+      showQualityMenu
     );
-    settingsButton.classList.add("icon-only");
-    settingsButton.title = "Quality and audio (Q / Shift-Q change quality)";
-    settingsButton.setAttribute("aria-label", "Settings");
-    settingsButton.setAttribute("aria-haspopup", "menu");
-    settingsButton.setAttribute("aria-expanded", "false");
-    controls.appendChild(settingsButton);
-    if (document.querySelector("ytd-watch-flexy")) {
+    const audioButton = menuButton(
+      "audio",
+      "Audio",
+      "Audio language",
+      showAudioMenu
+    );
+    const subtitlesButton = menuButton(
+      "subtitles",
+      "Subtitles",
+      "Subtitles (C turns them on and off)",
+      showSubtitleMenu
+    );
+    const speedButton = menuButton(
+      "speed",
+      "Speed",
+      "Playback speed (< and > change it)",
+      showSpeedMenu
+    );
+    controls.append(qualityButton, audioButton, subtitlesButton, speedButton);
+    toolbar.refresh = () => {
+      const quality = qualityButtonLabel(videoState.activeQuality);
+      qualityButton.textContent = quality;
+      qualityButton.setAttribute("aria-label", `Quality: ${quality}`);
+      const hasDubs = availableAudioTracks().dubs.length > 0;
+      audioButton.hidden = !hasDubs;
+      if (hasDubs) {
+        const language = audioLanguageLabel(videoState.audioLanguage);
+        audioButton.textContent = language;
+        audioButton.setAttribute("aria-label", `Audio: ${language}`);
+      }
+      const hasSubtitles = subtitleTracks(video).length > 0;
+      subtitlesButton.hidden = !hasSubtitles;
+      if (hasSubtitles) {
+        const subtitles = subtitleButtonLabel(showingSubtitleTrack(video));
+        subtitlesButton.textContent = subtitles;
+        subtitlesButton.setAttribute("aria-label", `Subtitles: ${subtitles}`);
+      }
+      const speed = speedLabel(video.playbackRate);
+      speedButton.textContent = speed;
+      speedButton.setAttribute("aria-label", `Speed: ${speed}`);
+      for (const button of [audioButton, subtitlesButton, speedButton])
+        button.title = `${button.dataset.name}: ${button.textContent}`;
+      fitControls(toolbar);
+    };
+    toolbar.refresh();
+    new ResizeObserver(() => fitControls(toolbar)).observe(video);
+    video.addEventListener("ratechange", toolbar.refresh);
+    for (const type of ["change", "addtrack", "removetrack"])
+      video.textTracks.addEventListener(type, toolbar.refresh);
+    onPlayerStateChange(() => {
+      if (toolbar.isConnected) toolbar.refresh();
+    });
+    if (hasTheaterMode()) {
       const theaterButton = makeToolbarButton(
         "",
         () => toggleTheaterMode(),
         "theater"
       );
       theaterButton.classList.add("icon-only");
-      theaterButton.title = "Theater mode (T)";
       theaterButton.setAttribute("aria-label", "Theater mode");
       controls.appendChild(theaterButton);
       trackTheaterMode(theaterButton);

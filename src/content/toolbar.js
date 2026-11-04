@@ -8,7 +8,7 @@ import {
 import { languageName } from "./languages.js";
 import { switchVideoSource } from "./source.js";
 import { availableAudioTracks, buildStreams } from "./stream-urls.js";
-import { reportPlayerState } from "./player-state.js";
+import { onPlayerStateChange, reportPlayerState } from "./player-state.js";
 import { settings, videoState } from "./state.js";
 
 // A toolbar button. Mouse clicks don't focus it, so Space and the other
@@ -198,40 +198,110 @@ export function toggleMenu(toolbar, anchor, open) {
   if (openMenuOf(toolbar)?.anchor === anchor) closeMenu(toolbar);
   else open();
 }
-// The Settings menu: Quality, then Audio for videos with dubs. Ids are
-// "quality:<id>" and "audio:<language>" ("audio:" for the original).
-export function settingsMenuItems(streams, currentQuality, tracks, language) {
-  const items = [{ heading: "Quality" }];
-  for (const quality of MENU_QUALITIES)
-    if (streams[quality])
-      items.push({
-        id: `quality:${quality}`,
-        label: qualityLabel(quality),
-        active: quality === currentQuality,
-        separatorBefore: quality === "audio",
-      });
-  if (tracks.dubs.length > 0) {
-    items.push({ heading: "Audio", separatorBefore: true });
-    for (const item of audioMenuItems(tracks, language))
-      items.push({ ...item, id: `audio:${item.id ?? ""}` });
-  }
-  return items;
+// The Quality menu: Auto, best to worst, then Sound only set apart. Ids are
+// quality ids.
+export function qualityMenuItems(streams, currentQuality) {
+  return MENU_QUALITIES.filter((quality) => streams[quality]).map(
+    (quality) => ({
+      id: quality,
+      label: qualityLabel(quality),
+      active: quality === currentQuality,
+      separatorBefore: quality === "audio",
+    }),
+  );
 }
-export function showSettingsMenu(video, toolbar, anchor) {
-  const items = settingsMenuItems(
+export function showQualityMenu(video, toolbar, anchor) {
+  const items = qualityMenuItems(
     videoState.streams,
     videoState.activeQuality || settings.quality,
+  );
+  openMenu(toolbar, anchor, "Quality", items, (id) =>
+    setQuality(video, id, { save: true }),
+  );
+}
+export function showAudioMenu(video, toolbar, anchor) {
+  const items = audioMenuItems(
     availableAudioTracks(),
     videoState.audioLanguage,
   );
-  openMenu(toolbar, anchor, "Settings", items, (id) => {
-    const [kind, value] = [
-      id.slice(0, id.indexOf(":")),
-      id.slice(id.indexOf(":") + 1),
-    ];
-    if (kind === "quality") setQuality(video, value, { save: true });
-    else setAudioLanguage(video, value || null);
+  openMenu(toolbar, anchor, "Audio", items, (id) =>
+    setAudioLanguage(video, id),
+  );
+}
+// The Quality button's label: what's playing ("1080p", "Auto", "Sound only").
+export function qualityButtonLabel(quality) {
+  return qualityLabel(quality || "auto");
+}
+// The video's subtitle tracks (Spelare's, from YouTube's caption list).
+function subtitleTracks(video) {
+  return Array.from(video.textTracks).filter(
+    (track) => track.kind === "subtitles",
+  );
+}
+// The Subtitles menu: Off, then each track as YouTube names it. Ids are
+// track labels ("" for off).
+export function subtitleMenuItems(labels, showing) {
+  return [
+    { id: "", label: "Off", active: showing === null, separatorBefore: false },
+    ...labels.map((label, index) => ({
+      id: label,
+      label,
+      active: label === showing,
+      separatorBefore: index === 0,
+    })),
+  ];
+}
+// The Subtitles button's label: "Off", or the showing track's language
+// ("English"; YouTube's full name, such as "English (auto-generated)", is
+// in the menu).
+export function subtitleButtonLabel(track) {
+  if (!track) return "Off";
+  const name = languageName(track.language);
+  if (name !== "System") return name;
+  return track.label.length > 20 ? `${track.label.slice(0, 19)}…` : track.label;
+}
+function showingSubtitleTrack(video) {
+  return subtitleTracks(video).find((track) => track.mode === "showing");
+}
+export function showSubtitleMenu(video, toolbar, anchor) {
+  const tracks = subtitleTracks(video);
+  const items = subtitleMenuItems(
+    tracks.map((track) => track.label),
+    showingSubtitleTrack(video)?.label ?? null,
+  );
+  openMenu(toolbar, anchor, "Subtitles", items, (label) => {
+    log("setSubtitles:", label || "off");
+    for (const track of tracks)
+      track.mode = label && track.label === label ? "showing" : "disabled";
+    videoState.captionChoice = label || null;
   });
+}
+// The Speed menu's choices, the same range the < and > hotkeys step through.
+export const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+export function speedLabel(rate) {
+  return `${Math.round(rate * 100) / 100}×`;
+}
+export function speedMenuItems(current) {
+  return SPEEDS.map((rate) => ({
+    id: String(rate),
+    label: rate === 1 ? "Normal" : speedLabel(rate),
+    active: Math.abs(rate - current) < 0.001,
+    separatorBefore: false,
+  }));
+}
+// Picking a speed sets the video's rate; playback-prefs.js remembers it for
+// the channel, as it does for Safari's own speed menu.
+export function showSpeedMenu(video, toolbar, anchor) {
+  openMenu(
+    toolbar,
+    anchor,
+    "Speed",
+    speedMenuItems(video.playbackRate),
+    (rate) => {
+      log("setSpeed:", rate);
+      video.playbackRate = Number(rate);
+    },
+  );
 }
 // The Audio button's label: "Original", or the dub's language.
 export function audioLanguageLabel(language) {
@@ -335,20 +405,50 @@ function isTheaterMode() {
   );
 }
 // Keeps the Theater button's state in step with the page, however theater
-// mode was changed (button, `t`, YouTube's own controls).
+// mode was changed (button, `t`, YouTube's own controls). The watch page's
+// element may not exist yet when the toolbar is made, so this watches the
+// whole document for its theater attribute (the filter keeps that cheap),
+// until the button is gone.
 function trackTheaterMode(button) {
   const update = () => {
+    if (!button.isConnected && observer) {
+      observer.disconnect();
+      return;
+    }
     const theater = isTheaterMode();
     button.classList.toggle("active", theater);
     button.setAttribute("aria-pressed", String(theater));
+    button.title = theater ? "Default view (T)" : "Theater mode (T)";
   };
+  const observer = new MutationObserver(update);
   update();
-  const watchPage = document.querySelector("ytd-watch-flexy");
-  if (watchPage)
-    new MutationObserver(update).observe(watchPage, {
-      attributes: true,
-      attributeFilter: ["theater"],
-    });
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["theater"],
+    subtree: true,
+  });
+}
+// Theater is on YouTube's desktop site only: the mobile site, embeds and
+// YouTube Music have none. (Not "is the watch page there yet": it may not
+// be when the toolbar is made, and then the button never showed.)
+export function hasTheaterMode(where = location) {
+  return (
+    where.hostname === "www.youtube.com" && !where.pathname.startsWith("/embed")
+  );
+}
+// When the capsule's labels don't fit between Safari's corner controls (a
+// small player, or every button showing), Audio, Subtitles and Speed show
+// their icons only (mac.css), and their values stay in the tooltip and menu.
+// Measured with the chapter at its usual width, so it isn't squeezed to
+// "…" first.
+function fitControls(toolbar) {
+  const controls = toolbar.querySelector(".controls");
+  if (!controls || !toolbar.isConnected) return;
+  toolbar.classList.remove("compact");
+  toolbar.classList.add("measuring");
+  const overflows = controls.scrollWidth > controls.clientWidth + 1;
+  toolbar.classList.remove("measuring");
+  toolbar.classList.toggle("compact", overflows);
 }
 // How long the controls stay after the pointer stops moving over the video.
 const HIDE_DELAY_MS = 3000;
@@ -358,6 +458,7 @@ const HIDE_DELAY_MS = 3000;
 // button has keyboard focus). Returns the function that re-checks.
 function autoHide(toolbar, video) {
   let pointerActive = false;
+  let shown = false;
   let overControls = false;
   let idleTimer;
   const update = () => {
@@ -366,6 +467,9 @@ function autoHide(toolbar, video) {
       overControls ||
       video.paused ||
       openMenuOf(toolbar) !== null;
+    // Dubs can turn up after the toolbar is made: check as it appears.
+    if (show && !shown) toolbar.refresh?.();
+    shown = show;
     toolbar.classList.toggle("visible", show);
   };
   const settleAfter = (delay) => {
@@ -400,10 +504,12 @@ function autoHide(toolbar, video) {
   update();
   return update;
 }
-// Spelare's controls, one capsule like Safari's own: [Chapters] [Settings]
-// [Theater]. The chapter (added once known, chapters.js) is the only text;
-// Settings holds Quality and Audio; Theater is an icon that fills in while
-// theater mode is on.
+// Spelare's controls, one capsule like Safari's own:
+// [Chapters] [Quality] [Audio] [Subtitles] [Speed] [Theater]. Each shows
+// its current value ("1080p", "English", "1.5×"), so all are a click away;
+// Audio is only there for videos with dubs, Subtitles for videos with
+// captions. Theater is an icon that swaps between "make
+// it wider" and "make it smaller".
 export function createToolbar(video) {
   log("createToolbar");
   const toolbar = document.createElement("div");
@@ -411,29 +517,86 @@ export function createToolbar(video) {
   const controls = document.createElement("div");
   controls.classList.add("controls");
   toolbar.appendChild(controls);
-  const settingsButton = makeToolbarButton(
-    "",
-    () =>
-      toggleMenu(toolbar, settingsButton, () =>
-        showSettingsMenu(video, toolbar, settingsButton),
-      ),
+  const menuButton = (className, name, title, open) => {
+    const button = makeToolbarButton(
+      "",
+      () => toggleMenu(toolbar, button, () => open(video, toolbar, button)),
+      className,
+    );
+    button.title = title;
+    button.setAttribute("aria-haspopup", "menu");
+    button.setAttribute("aria-expanded", "false");
+    button.dataset.name = name;
+    return button;
+  };
+  // The "settings" class is kept: fallback.js replaces this button.
+  const qualityButton = menuButton(
     "settings",
+    "Quality",
+    "Quality (Q / Shift-Q change it)",
+    showQualityMenu,
   );
-  settingsButton.classList.add("icon-only");
-  settingsButton.title = "Quality and audio (Q / Shift-Q change quality)";
-  settingsButton.setAttribute("aria-label", "Settings");
-  settingsButton.setAttribute("aria-haspopup", "menu");
-  settingsButton.setAttribute("aria-expanded", "false");
-  controls.appendChild(settingsButton);
-  // Theater only where YouTube has it (the desktop site, not the mobile one).
-  if (document.querySelector("ytd-watch-flexy")) {
+  const audioButton = menuButton(
+    "audio",
+    "Audio",
+    "Audio language",
+    showAudioMenu,
+  );
+  const subtitlesButton = menuButton(
+    "subtitles",
+    "Subtitles",
+    "Subtitles (C turns them on and off)",
+    showSubtitleMenu,
+  );
+  const speedButton = menuButton(
+    "speed",
+    "Speed",
+    "Playback speed (< and > change it)",
+    showSpeedMenu,
+  );
+  controls.append(qualityButton, audioButton, subtitlesButton, speedButton);
+  toolbar.refresh = () => {
+    const quality = qualityButtonLabel(videoState.activeQuality);
+    qualityButton.textContent = quality;
+    qualityButton.setAttribute("aria-label", `Quality: ${quality}`);
+    const hasDubs = availableAudioTracks().dubs.length > 0;
+    audioButton.hidden = !hasDubs;
+    if (hasDubs) {
+      const language = audioLanguageLabel(videoState.audioLanguage);
+      audioButton.textContent = language;
+      audioButton.setAttribute("aria-label", `Audio: ${language}`);
+    }
+    const hasSubtitles = subtitleTracks(video).length > 0;
+    subtitlesButton.hidden = !hasSubtitles;
+    if (hasSubtitles) {
+      const subtitles = subtitleButtonLabel(showingSubtitleTrack(video));
+      subtitlesButton.textContent = subtitles;
+      subtitlesButton.setAttribute("aria-label", `Subtitles: ${subtitles}`);
+    }
+    const speed = speedLabel(video.playbackRate);
+    speedButton.textContent = speed;
+    speedButton.setAttribute("aria-label", `Speed: ${speed}`);
+    for (const button of [audioButton, subtitlesButton, speedButton])
+      button.title = `${button.dataset.name}: ${button.textContent}`;
+    fitControls(toolbar);
+  };
+  toolbar.refresh();
+  new ResizeObserver(() => fitControls(toolbar)).observe(video);
+  // Speed and subtitles also change from hotkeys, Safari's own menus and
+  // Now Playing; caption tracks arrive a moment after the video starts.
+  video.addEventListener("ratechange", toolbar.refresh);
+  for (const type of ["change", "addtrack", "removetrack"])
+    video.textTracks.addEventListener(type, toolbar.refresh);
+  onPlayerStateChange(() => {
+    if (toolbar.isConnected) toolbar.refresh();
+  });
+  if (hasTheaterMode()) {
     const theaterButton = makeToolbarButton(
       "",
       () => toggleTheaterMode(),
       "theater",
     );
     theaterButton.classList.add("icon-only");
-    theaterButton.title = "Theater mode (T)";
     theaterButton.setAttribute("aria-label", "Theater mode");
     controls.appendChild(theaterButton);
     trackTheaterMode(theaterButton);

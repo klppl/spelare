@@ -62,23 +62,22 @@ function spelareToolbar() {
     <div id="spelare-toolbar" class="visible">
       <div class="controls">
         <button type="button" class="button chapters" aria-haspopup="menu" aria-expanded="false">The dance break</button>
-        <button type="button" class="button settings icon-only" aria-label="Settings" aria-haspopup="menu" aria-expanded="${menuOpen}"></button>
+        <button type="button" class="button settings" aria-label="Quality: 1080p" aria-haspopup="menu" aria-expanded="${menuOpen}">1080p</button>
+        <button type="button" class="button subtitles" aria-label="Subtitles: English" aria-haspopup="menu" aria-expanded="false">English</button>
+        <button type="button" class="button speed" aria-label="Speed: 1×" aria-haspopup="menu" aria-expanded="false">1×</button>
         <button type="button" class="button theater icon-only" aria-label="Theater mode"></button>
       </div>
       ${menuOpen ? settingsMenu() : ""}
     </div>`;
 }
 
-// The Settings menu, with the items settingsMenuItems() gives a video that
-// has two dubs.
+// The Quality menu, with the items qualityMenuItems() gives a 4K video.
 function settingsMenu() {
     const row = (label, active = false) =>
         `<button type="button" class="button${active ? " active" : ""}" role="menuitemradio" aria-checked="${active}"><span class="menu-label">${label}</span></button>`;
-    const heading = (text) => `<div class="menu-heading" role="presentation">${text}</div>`;
     const separator = '<div class="separator" role="separator"></div>';
     return `
-    <div class="picker" role="menu" aria-label="Settings" style="--spelare-menu-max-height: 600px">
-      ${heading("Quality")}
+    <div class="picker" role="menu" aria-label="Quality" style="--spelare-menu-max-height: 600px">
       ${row("Auto")}
       ${row("2160p")}
       ${row("1440p")}
@@ -88,11 +87,6 @@ function settingsMenu() {
       ${row("360p")}
       ${separator}
       ${row("Sound only")}
-      ${separator}
-      ${heading("Audio")}
-      ${row("Original (English)", true)}
-      ${row("Spanish")}
-      ${row("Japanese")}
     </div>`;
 }
 
@@ -140,7 +134,7 @@ document.body.innerHTML = `
     </div>
   </div>`;
 
-// The menu opens under the Settings button, as openMenu() places it.
+// The menu opens under the Quality button, as openMenu() places it.
 const picker = document.querySelector("#spelare-toolbar .picker");
 if (picker) {
     const anchor = document.querySelector("#spelare-toolbar .settings");

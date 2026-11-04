@@ -53,13 +53,19 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
    no "pageObserver: did not start", and the video fills the player (also after resizing the window).
 2. Controls: one capsule at the top centre, between Safari's own groups and the same height, showing on
    pointer movement and while paused. It holds the chapter (only on videos whose description lists
-   chapters, 0:00 …), Settings and Theater; on a narrow player a long chapter title shortens, and the
+   chapters, 0:00 …), Quality (showing what plays, e.g. "1080p"), Audio (only on videos with dubs,
+   showing the language), Subtitles (only on videos with captions, showing the language or "Off"),
+   Speed (showing the rate, e.g. "1×") and Theater; on a narrow player a long chapter title shortens, and the
    capsule never reaches Safari's volume.
-   Settings → Quality: switch to 720p, then Auto, then Sound only; position and play state are kept.
-   Settings → Audio (only on videos with dubs): a language switches the soundtrack, keeping position and
-   quality (or the closest the dub has); Original goes back.
+   Quality: switch to 720p, then Auto, then Sound only; position and play state are kept, and the
+   button's label follows (also with `q` / Shift-Q).
+   Audio: a language switches the soundtrack, keeping position and quality (or the closest the dub
+   has); Original goes back. The button's label follows.
+   Subtitles: pick a track, then Off; `c` and Safari's own caption menu update the label, and the
+   choice survives a quality change. Speed: pick 1.5×; `<` / `>` and Safari's speed menu update the
+   label, and the channel's next video plays at 1.5×.
    The chapter follows playback; its menu jumps to any chapter. Theater toggles theater mode (so does
-   `t`); its icon is filled while it's on.
+   `t`); its arrows point outwards in the default view and inwards in theater mode.
    Double-clicking the picture toggles full screen; double-clicking Safari's own buttons or play bar
    doesn't. The Spelare button in Safari's toolbar shows the playing quality (`1080`, `4K`, `Auto`, `♪`),
    `!` when YouTube's player took over, and nothing on pages without a video; hovering it says which.
@@ -83,7 +89,7 @@ Build and run `xcode/SpelareDev`, enable the extension, open the Web Inspector c
 8. Shorts: opening `/shorts/…` then navigating to a normal video reloads into the full player.
 9. Embed (`youtube-nocookie.com/embed/…`) and music.youtube.com still play. A watch page opened in a
    background tab plays once you switch to it.
-10. Fallback: when a stream fails, the controls show "YouTube player" in place of Settings and YouTube's own player plays; clicking it
+10. Fallback: when a stream fails, the controls show "YouTube player" in place of Quality and YouTube's own player plays; clicking it
     explains why (refused stream, or no stream found).
 11. Popup "Show diagnostic log" lists the log for the session above as plain text, with no errors.
 12. Popup "Show dislike counts": a number appears in YouTube's dislike button on watch pages (and
@@ -108,4 +114,4 @@ Extensions turn Spelare on and set m.youtube.com (and www.youtube.com for iPad) 
 1. On `m.youtube.com/watch?v=…` Spelare's player replaces YouTube's: iOS's own controls (±10 s, timeline,
    captions), no YouTube player controls on top. One tap shows them together with the capsule.
 2. The capsule fits between iOS's corner buttons, with no Theater; a long chapter title shortens.
-3. One tap on Settings opens the menu, which stays on screen; picking a quality switches it.
+3. One tap on Quality opens the menu, which stays on screen; picking a quality switches it.

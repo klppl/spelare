@@ -41,10 +41,18 @@ export function playerBadge(state, quality) {
   return { text: "", title: "Spelare" };
 }
 
+// Called whenever what's playing may have changed (quality, audio), so the
+// toolbar's labels keep up. The latest toolbar's listener replaces older ones.
+let stateListener = null;
+export function onPlayerStateChange(listener) {
+  stateListener = listener;
+}
+
 let lastSent = null;
 // Tells background.js what's playing now. Only the top frame speaks for
 // the tab; repeats are skipped.
 export function reportPlayerState(state) {
+  stateListener?.();
   if (window.top !== window) return;
   const badge = playerBadge(state, videoState.activeQuality ?? "auto");
   const key = `${badge.text}|${badge.title}`;
